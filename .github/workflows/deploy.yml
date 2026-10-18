@@ -1,0 +1,14 @@
+# Deploys the reference instance: the public repository's Deploy workflow, run on the version the
+# fielder/ submodule is pinned to (scripts/bump.sh keeps the two refs equal). Manual only: the owner
+# deploys. Settings are this repository's secrets and variables (README.md).
+name: Deploy
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    uses: bubulux/fielder/.github/workflows/deploy.yml@373d1c6836b4d79e01e22a1980ca252987f9c165
+    with:
+      path: fielder
+    secrets: inherit
