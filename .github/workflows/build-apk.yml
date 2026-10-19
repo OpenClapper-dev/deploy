@@ -9,7 +9,7 @@ on:
 
 jobs:
   build:
-    uses: bubulux/fielder/.github/workflows/build-apk.yml@9b245cf02ed9ebc44df74b9e01d9a5c838e0dc27
+    uses: bubulux/fielder/.github/workflows/build-apk.yml@f5cda137750d4bcacce0156f0e15b17895be0a77
     with:
       path: fielder
     secrets: inherit
