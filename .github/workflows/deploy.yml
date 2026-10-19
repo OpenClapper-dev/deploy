@@ -8,7 +8,7 @@ on:
 
 jobs:
   deploy:
-    uses: bubulux/fielder/.github/workflows/deploy.yml@a78a9124d2ec4b55a3a7354d132036a8ff41065e
+    uses: bubulux/fielder/.github/workflows/deploy.yml@cdb28ab55e59f480c01d7da908965d77df17ec9f
     with:
       path: fielder
     secrets: inherit

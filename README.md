@@ -20,12 +20,12 @@ submodule (no secrets). Ops scripts work the same way, e.g.
 
 ## Phone app
 
-Actions → **Build APK** → Run workflow:
-- **runner** (default): built on the GitHub runner, no EAS quota. The APK is the run's artifact and is
-  **deleted after 3 days** (this private repository has 500 MB of artifact storage; one APK is ~120 MB).
-- **cloud**: queued on EAS; download it from the build's page on expo.dev.
-
-It builds against `APP_URL` and signs with the keystore of the Expo project `@bubulux/fielder`.
+Actions → **Build APK** → Run workflow: `expo prebuild` + Gradle on the GitHub runner, no Expo account.
+The APK is the run's artifact and is **deleted after 3 days** (this private repository has 500 MB of
+artifact storage; one APK is ~120 MB). It builds against `APP_URL` and signs with this instance's key
+(the `ANDROID_KEY*` secrets; the key itself and its passwords are in `.secrets/android/` and
+`.secrets/android.env` of the owner's public checkout, plus the owner's backup). Never make a new key:
+it cannot update the installed app.
 
 ## Settings
 
@@ -35,7 +35,7 @@ Secrets (Settings → Secrets and variables → Actions):
 | --- | --- |
 | `CLOUDFLARE_API_TOKEN` | A Cloudflare API token with the permissions in [self-hosting](https://github.com/bubulux/fielder/blob/main/docs/self-hosting.md#1-a-cloudflare-api-token). Set |
 | `CLOUDFLARE_ACCOUNT_ID` | Set |
-| `EXPO_TOKEN` | An Expo access token (expo.dev → Account settings → Access tokens), for Build APK. **Still to create.** |
+| `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD` | The Android signing key for Build APK (made with `fielder/scripts/keystore.sh`). Set |
 
 Variables: `D1_DATABASE_NAME`, `D1_DATABASE_ID`, `R2_BUCKET`, `APP_WORKER_NAME`, `ADMIN_WORKER_NAME`,
 `ACCESS_TEAM_DOMAIN`, `ADMIN_ACCESS_AUD`, `APP_URL` (Build APK), optionally `PBKDF2_ITERATIONS`,
@@ -45,7 +45,7 @@ Variables: `D1_DATABASE_NAME`, `D1_DATABASE_ID`, `R2_BUCKET`, `APP_WORKER_NAME`,
 
 ```sh
 git submodule update --init
-scripts/bump.sh main        # or a release tag once there are tags
+scripts/bump.sh v0.2.0      # a release tag (fielder/docs/releasing.md), or main
 git commit -m "fielder → …" && git push
 ```
 
