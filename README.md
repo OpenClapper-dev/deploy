@@ -14,6 +14,8 @@ Actions → **Release** → Run workflow puts the newest release of the public r
 
 When the tag is already pinned, it still deploys and builds. New D1 migrations stop it, with the list in the run's summary; review them, then run it again with **Apply new migrations** ticked. The two runs it starts are linked in its summary.
 
+It needs the secret `RELEASE_TOKEN`, because the bump rewrites the workflow files' pinned refs and a run's own token may never push workflow files. Create a fine-grained personal access token for **this repository only**, with Contents and Workflows set to Read and write, and store it as that secret. When it expires, Release stops at its first step and says so.
+
 ## Deploy
 
 Actions → **Deploy** → Run workflow. It runs the public repository's Deploy workflow on the pinned

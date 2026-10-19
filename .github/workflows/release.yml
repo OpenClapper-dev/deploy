@@ -3,6 +3,9 @@
 # once that is green, Build APK. Already on the newest tag: deploys and builds anyway, so a press always
 # ends with that version live. New D1 migrations stop it (listed in the run's summary) until it is run
 # again with "Apply new migrations" ticked. Manual only.
+# The bump rewrites the workflow files' pinned refs, which this run's own token may never push, so the
+# checkout uses RELEASE_TOKEN: a fine-grained token for this repository only, Contents + Workflows
+# read and write (README.md).
 name: Release
 
 on:
@@ -14,7 +17,7 @@ on:
         default: false
 
 permissions:
-  contents: write # push the bump
+  contents: read # the push goes with RELEASE_TOKEN
   actions: write # start Deploy and Build APK
 
 concurrency:
@@ -27,9 +30,15 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
     steps:
+      - name: RELEASE_TOKEN set
+        env:
+          RELEASE_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+        run: '[ -n "$RELEASE_TOKEN" ] || { echo "Set the RELEASE_TOKEN secret first (README.md)" >&2; exit 1; }'
+
       - uses: actions/checkout@v7
         with:
           submodules: true
+          token: ${{ secrets.RELEASE_TOKEN }}
 
       - name: Newest tag
         id: tag
