@@ -1,0 +1,88 @@
+# One button for "the newest Fielder release is live": finds the newest v* tag of the public
+# repository, moves the deployment to it (scripts/bump.sh, committed and pushed), then runs Deploy and,
+# once that is green, Build APK. Already on the newest tag: deploys and builds anyway, so a press always
+# ends with that version live. New D1 migrations stop it (listed in the run's summary) until it is run
+# again with "Apply new migrations" ticked. Manual only.
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      migrations_ok:
+        description: Apply new migrations (tick after reviewing the list a stopped run printed)
+        type: boolean
+        default: false
+
+permissions:
+  contents: write # push the bump
+  actions: write # start Deploy and Build APK
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: true
+
+      - name: Newest tag
+        id: tag
+        run: |
+          git -C fielder fetch -q --tags origin
+          tag=$(git -C fielder tag -l 'v*' --sort=-v:refname | head -1)
+          [ -n "$tag" ] || { echo "No v* tag in bubulux/fielder" >&2; exit 1; }
+          old=$(git -C fielder rev-parse HEAD)
+          new=$(git -C fielder rev-parse "$tag^{commit}")
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "old=$old" >> "$GITHUB_OUTPUT"
+          echo "new=$new" >> "$GITHUB_OUTPUT"
+          echo "Newest release: **$tag** (\`${new:0:7}\`); pinned: \`${old:0:7}\`." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Gate on new migrations
+        if: steps.tag.outputs.old != steps.tag.outputs.new
+        run: |
+          added=$(git -C fielder diff --name-only --diff-filter=A "${{ steps.tag.outputs.old }}" "${{ steps.tag.outputs.new }}" -- apps/worker/migrations)
+          [ -n "$added" ] || { echo "No new migrations." >> "$GITHUB_STEP_SUMMARY"; exit 0; }
+          { echo "New migrations:"; echo; echo "$added" | sed 's/^/- /'; } >> "$GITHUB_STEP_SUMMARY"
+          if [ "${{ inputs.migrations_ok }}" != "true" ]; then
+            echo >> "$GITHUB_STEP_SUMMARY"
+            echo "Stopped: review them, then run again with **Apply new migrations** ticked." >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
+
+      - name: Bump, commit, push
+        if: steps.tag.outputs.old != steps.tag.outputs.new
+        run: |
+          bash scripts/bump.sh "${{ steps.tag.outputs.tag }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898341+github-actions[bot]@users.noreply.github.com"
+          git commit -q -m "fielder → ${{ steps.tag.outputs.tag }}"
+          git push -q origin HEAD:main
+
+      # A workflow started with this run's token may start others by workflow_dispatch; the run id is
+      # the newest dispatched run created after the start time.
+      - name: Deploy, then Build APK
+        run: |
+          run() {
+            local wf=$1 since id=""
+            since=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+            gh workflow run "$wf" --ref main
+            for _ in $(seq 1 30); do
+              id=$(gh run list --workflow "$wf" --event workflow_dispatch --limit 5 --json databaseId,createdAt \
+                --jq "[.[] | select(.createdAt >= \"$since\")][0].databaseId // empty")
+              [ -n "$id" ] && break
+              sleep 5
+            done
+            [ -n "$id" ] || { echo "$wf did not start" >&2; exit 1; }
+            echo "$wf: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$id" >> "$GITHUB_STEP_SUMMARY"
+            gh run watch "$id" --exit-status --interval 30 > /dev/null
+          }
+          run deploy.yml
+          run build-apk.yml
+          echo "**${{ steps.tag.outputs.tag }}** deployed; the APK is the Build APK run's artifact." >> "$GITHUB_STEP_SUMMARY"

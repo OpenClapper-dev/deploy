@@ -5,6 +5,15 @@ The deployment of the reference Fielder instance. The product is the public repo
 repository only holds what is specific to this instance: its settings, its deploy pipeline, its notes,
 and later the hosted-only extensions (billing) plugged in through the auth seam.
 
+## Release (one button)
+
+Actions → **Release** → Run workflow puts the newest release of the public repository live:
+1. It finds the newest `v*` tag, pre-releases included.
+2. It moves this repository to that tag (`scripts/bump.sh`, committed and pushed by the bot).
+3. It runs **Deploy**, waits for it to go green, then runs **Build APK**.
+
+When the tag is already pinned, it still deploys and builds. New D1 migrations stop it, with the list in the run's summary; review them, then run it again with **Apply new migrations** ticked. The two runs it starts are linked in its summary.
+
 ## Deploy
 
 Actions → **Deploy** → Run workflow. It runs the public repository's Deploy workflow on the pinned
