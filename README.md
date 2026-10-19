@@ -11,8 +11,21 @@ Actions → **Deploy** → Run workflow. It runs the public repository's Deploy 
 version: provision (no-op once D1 and R2 exist), D1 migrations, the app Worker (API + dashboard), the
 admin plane. Deploying is always a manual step.
 
-From a machine instead: work in a checkout of the public repository with this instance's `deploy.env`
-(the values below) and `make deploy` / `make deploy-admin`.
+From a machine instead, in this repository (`git submodule update --init`, then `pnpm -C fielder install`):
+`pnpm -C fielder/apps/worker migrate:remote`, `pnpm -C fielder/apps/worker run deploy`,
+`pnpm -C fielder/apps/admin run deploy`. They read [`deploy.env`](deploy.env) here, beside the
+submodule (no secrets). Ops scripts work the same way, e.g.
+`node fielder/scripts/user.mjs --email … --remote`. Wrangler needs `CLOUDFLARE_API_TOKEN` or
+`pnpm -C fielder exec wrangler login --device`.
+
+## Phone app
+
+Actions → **Build APK** → Run workflow:
+- **runner** (default): built on the GitHub runner, no EAS quota. The APK is the run's artifact and is
+  **deleted after 3 days** (this private repository has 500 MB of artifact storage; one APK is ~120 MB).
+- **cloud**: queued on EAS; download it from the build's page on expo.dev.
+
+It builds against `APP_URL` and signs with the keystore of the Expo project `@bubulux/fielder`.
 
 ## Settings
 
@@ -20,12 +33,13 @@ Secrets (Settings → Secrets and variables → Actions):
 
 | Secret | |
 | --- | --- |
-| `CLOUDFLARE_API_TOKEN` | A Cloudflare API token with the permissions in [self-hosting](https://github.com/bubulux/fielder/blob/main/docs/self-hosting.md#1-a-cloudflare-api-token). **Still to create.** |
+| `CLOUDFLARE_API_TOKEN` | A Cloudflare API token with the permissions in [self-hosting](https://github.com/bubulux/fielder/blob/main/docs/self-hosting.md#1-a-cloudflare-api-token). Set |
 | `CLOUDFLARE_ACCOUNT_ID` | Set |
+| `EXPO_TOKEN` | An Expo access token (expo.dev → Account settings → Access tokens), for Build APK. **Still to create.** |
 
 Variables: `D1_DATABASE_NAME`, `D1_DATABASE_ID`, `R2_BUCKET`, `APP_WORKER_NAME`, `ADMIN_WORKER_NAME`,
-`ACCESS_TEAM_DOMAIN`, `APP_ACCESS_AUD` (only until the cutover, then delete it), `ADMIN_ACCESS_AUD`
-(once the admin Access application exists), optionally `PBKDF2_ITERATIONS`, `AUTH_PROVIDER`.
+`ACCESS_TEAM_DOMAIN`, `ADMIN_ACCESS_AUD`, `APP_URL` (Build APK), optionally `PBKDF2_ITERATIONS`,
+`AUTH_PROVIDER`. The same values are in [`deploy.env`](deploy.env); change both together.
 
 ## Updating
 
@@ -35,8 +49,8 @@ scripts/bump.sh main        # or a release tag once there are tags
 git commit -m "fielder → …" && git push
 ```
 
-then run Deploy. `bump.sh` moves the submodule and the workflow's ref together, so the deploy scripts
-and the workflow that runs them come from the same version. Migrations are additive; read the new ones
+then run Deploy. `bump.sh` moves the submodule and the workflows' refs together, so the scripts and the
+workflows that run them come from the same version. Migrations are additive; read the new ones
 in `fielder/apps/worker/migrations/` before deploying.
 
 ## Hosted extensions (later)
