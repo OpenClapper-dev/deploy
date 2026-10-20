@@ -1,7 +1,7 @@
 # deploy
 
 The deployment of the reference Fielder instance. The product is the public repository
-[OpenClapper-dev/core](https://github.com/OpenClapper-dev/core), here as the `fielder/` submodule; this
+[OpenClapper-dev/core](https://github.com/OpenClapper-dev/core), here as the `core/` submodule; this
 repository only holds what is specific to this instance: its settings, its deploy pipeline, its notes,
 and later the hosted-only extensions (billing) plugged in through the auth seam.
 
@@ -22,12 +22,12 @@ Actions → **Deploy** → Run workflow. It runs the public repository's Deploy 
 version: provision (no-op once D1 and R2 exist), D1 migrations, the app Worker (API + dashboard), the
 admin plane. Deploying is always a manual step.
 
-From a machine instead, in this repository (`git submodule update --init`, then `pnpm -C fielder install`):
-`pnpm -C fielder/apps/worker migrate:remote`, `pnpm -C fielder/apps/worker run deploy`,
-`pnpm -C fielder/apps/admin run deploy`. They read [`deploy.env`](deploy.env) here, beside the
+From a machine instead, in this repository (`git submodule update --init`, then `pnpm -C core install`):
+`pnpm -C core/apps/worker migrate:remote`, `pnpm -C core/apps/worker run deploy`,
+`pnpm -C core/apps/admin run deploy`. They read [`deploy.env`](deploy.env) here, beside the
 submodule (no secrets). Ops scripts work the same way, e.g.
-`node fielder/scripts/user.mjs --email … --remote`. Wrangler needs `CLOUDFLARE_API_TOKEN` or
-`pnpm -C fielder exec wrangler login --device`.
+`node core/scripts/user.mjs --email … --remote`. Wrangler needs `CLOUDFLARE_API_TOKEN` or
+`pnpm -C core exec wrangler login --device`.
 
 ## Phone app
 
@@ -46,7 +46,7 @@ Secrets (Settings → Secrets and variables → Actions):
 | --- | --- |
 | `CLOUDFLARE_API_TOKEN` | A Cloudflare API token with the permissions in [self-hosting](https://github.com/OpenClapper-dev/core/blob/main/docs/self-hosting.md#1-a-cloudflare-api-token). Set |
 | `CLOUDFLARE_ACCOUNT_ID` | Set |
-| `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD` | The Android signing key for Build APK (made with `fielder/scripts/keystore.sh`). Set |
+| `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD` | The Android signing key for Build APK (made with `core/scripts/keystore.sh`). Set |
 
 Variables: `D1_DATABASE_NAME`, `D1_DATABASE_ID`, `R2_BUCKET`, `APP_WORKER_NAME`, `ADMIN_WORKER_NAME`,
 `ACCESS_TEAM_DOMAIN`, `ADMIN_ACCESS_AUD`, `APP_URL` (Build APK), optionally `PBKDF2_ITERATIONS`,
@@ -56,19 +56,19 @@ Variables: `D1_DATABASE_NAME`, `D1_DATABASE_ID`, `R2_BUCKET`, `APP_WORKER_NAME`,
 
 ```sh
 git submodule update --init
-scripts/bump.sh v0.2.0      # a release tag (fielder/docs/releasing.md), or main
-git commit -m "fielder → …" && git push
+scripts/bump.sh v0.2.0      # a release tag (core/docs/releasing.md), or main
+git commit -m "core → …" && git push
 ```
 
 then run Deploy. `bump.sh` moves the submodule and the workflows' refs together, so the scripts and the
 workflows that run them come from the same version. Migrations are additive; read the new ones
-in `fielder/apps/worker/migrations/` before deploying.
+in `core/apps/worker/migrations/` before deploying.
 
 ## Hosted extensions (later)
 
 A module here (e.g. `hosted/provider.ts`) that exports `provider: AuthProvider` and wraps the
 first-party one, with billing checks in `allow`, goes live by setting the variable
-`AUTH_PROVIDER=../hosted/provider.ts` (relative to `fielder/`). See
+`AUTH_PROVIDER=../hosted/provider.ts` (relative to `core/`). See
 [the auth seam](https://github.com/OpenClapper-dev/core/blob/main/apps/worker/src/authn/provider.ts).
 
 Instance notes: [docs/instance.md](docs/instance.md).

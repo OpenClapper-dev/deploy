@@ -1,5 +1,5 @@
 # Deploys the reference instance: the public repository's Deploy workflow, run on the version the
-# fielder/ submodule is pinned to (scripts/bump.sh keeps the two refs equal). Manual only: the owner
+# core/ submodule is pinned to (scripts/bump.sh keeps the two refs equal). Manual only: the owner
 # deploys. Settings are this repository's secrets and variables (README.md).
 name: Deploy
 
@@ -8,7 +8,7 @@ on:
 
 jobs:
   deploy:
-    uses: OpenClapper-dev/core/.github/workflows/deploy.yml@5fa0f1208f22abaeddddcc5e90c05cc133b8d802
+    uses: OpenClapper-dev/core/.github/workflows/deploy.yml@f0ea7d624419231018f0ff9c096aee0f03496889
     with:
-      path: fielder
+      path: core
     secrets: inherit

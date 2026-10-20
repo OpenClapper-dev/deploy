@@ -15,6 +15,8 @@ What the public docs no longer name (they describe any instance).
 
 ## History
 
+- 2026-10-20: v0.6.0, everything renamed to OpenClapper (#233). The phone app is now `org.openclapper` (a new app; the old Fielder app can be uninstalled), the submodule is `core/`, and Build APK takes `variant: dev` for the development client.
+
 - 2026-10-20: rename to OpenClapper. D1 and R2 copied to `openclapper-db` / `openclapper-media` (25 tables, 183 objects, verified identical); Workers redeploy as `openclapper-api` / `openclapper-admin` on openclapper.app / admin.openclapper.app (APP_DOMAIN/ADMIN_DOMAIN). Verified same day (both web clients + APK); the old Workers, `fielder-db` and `fielder-shots` were deleted on 2026-10-20. The installed APK still points at the old URL and is abandoned (next build uses APP_URL).
 
 - 2026-09-13: the service token early builds used was revoked; APKs from before then cannot reach the API.

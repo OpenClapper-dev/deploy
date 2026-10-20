@@ -43,11 +43,11 @@ jobs:
       - name: Newest tag
         id: tag
         run: |
-          git -C fielder fetch -q --tags origin
-          tag=$(git -C fielder tag -l 'v*' --sort=-v:refname | head -1)
+          git -C core fetch -q --tags origin
+          tag=$(git -C core tag -l 'v*' --sort=-v:refname | head -1)
           [ -n "$tag" ] || { echo "No v* tag in OpenClapper-dev/core" >&2; exit 1; }
-          old=$(git -C fielder rev-parse HEAD)
-          new=$(git -C fielder rev-parse "$tag^{commit}")
+          old=$(git -C core rev-parse HEAD)
+          new=$(git -C core rev-parse "$tag^{commit}")
           echo "tag=$tag" >> "$GITHUB_OUTPUT"
           echo "old=$old" >> "$GITHUB_OUTPUT"
           echo "new=$new" >> "$GITHUB_OUTPUT"
@@ -56,7 +56,7 @@ jobs:
       - name: Gate on new migrations
         if: steps.tag.outputs.old != steps.tag.outputs.new
         run: |
-          added=$(git -C fielder diff --name-only --diff-filter=A "${{ steps.tag.outputs.old }}" "${{ steps.tag.outputs.new }}" -- apps/worker/migrations)
+          added=$(git -C core diff --name-only --diff-filter=A "${{ steps.tag.outputs.old }}" "${{ steps.tag.outputs.new }}" -- apps/worker/migrations)
           [ -n "$added" ] || { echo "No new migrations." >> "$GITHUB_STEP_SUMMARY"; exit 0; }
           { echo "New migrations:"; echo; echo "$added" | sed 's/^/- /'; } >> "$GITHUB_STEP_SUMMARY"
           if [ "${{ inputs.migrations_ok }}" != "true" ]; then
@@ -71,7 +71,7 @@ jobs:
           bash scripts/bump.sh "${{ steps.tag.outputs.tag }}"
           git config user.name "github-actions[bot]"
           git config user.email "41898341+github-actions[bot]@users.noreply.github.com"
-          git commit -q -m "fielder → ${{ steps.tag.outputs.tag }}"
+          git commit -q -m "core → ${{ steps.tag.outputs.tag }}"
           git push -q origin HEAD:main
 
       # A workflow started with this run's token may start others by workflow_dispatch; the run id is

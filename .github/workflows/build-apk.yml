@@ -1,15 +1,23 @@
 # Builds the phone app for the reference instance: the public repository's Build APK workflow, run on
-# the version the fielder/ submodule is pinned to (scripts/bump.sh keeps the refs equal). expo prebuild
+# the version the core/ submodule is pinned to (scripts/bump.sh keeps the refs equal). expo prebuild
 # + Gradle on the runner, signed with this instance's key; the APK is the run's artifact for 3 days.
-# Needs the four ANDROID_KEY* secrets and the APP_URL variable (README.md).
+# Needs the four ANDROID_KEY* secrets and the APP_URL variable (README.md); variant=dev builds the
+# development client instead (no key or server needed).
 name: Build APK
 
 on:
   workflow_dispatch:
+    inputs:
+      variant:
+        description: release (the app for APP_URL) or dev (the development client for Metro)
+        type: choice
+        options: [release, dev]
+        default: release
 
 jobs:
   build:
-    uses: OpenClapper-dev/core/.github/workflows/build-apk.yml@5fa0f1208f22abaeddddcc5e90c05cc133b8d802
+    uses: OpenClapper-dev/core/.github/workflows/build-apk.yml@f0ea7d624419231018f0ff9c096aee0f03496889
     with:
-      path: fielder
+      path: core
+      variant: ${{ inputs.variant || 'release' }}
     secrets: inherit
