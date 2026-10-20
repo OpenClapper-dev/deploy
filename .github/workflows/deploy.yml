@@ -8,7 +8,7 @@ on:
 
 jobs:
   deploy:
-    uses: OpenClapper-dev/core/.github/workflows/deploy.yml@a5030ffbc827a2fbb052f0241a15a376f0b29b4e
+    uses: OpenClapper-dev/core/.github/workflows/deploy.yml@5fa0f1208f22abaeddddcc5e90c05cc133b8d802
     with:
       path: fielder
     secrets: inherit
