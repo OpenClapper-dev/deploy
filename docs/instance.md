@@ -5,15 +5,17 @@ What the public docs no longer name (they describe any instance).
 | | |
 | --- | --- |
 | Cloudflare account | `3868cbc17be171c90972dd32e41e7783` |
-| App | Worker `fielder-api`, https://fielder-api.fielder-worker.workers.dev (API + dashboard) |
-| Admin plane | Worker `fielder-admin`, https://fielder-admin.fielder-worker.workers.dev |
-| D1 | `fielder-db`, `b12cf742-e055-4f75-aa01-0cf73e36dc63` (WEUR) |
-| R2 | `fielder-shots` (WEUR) |
+| App | Worker `openclapper-api`, https://openclapper.app (API + Studio; old: `fielder-api`, https://fielder-api.fielder-worker.workers.dev) |
+| Admin plane | Worker `openclapper-admin`, https://admin.openclapper.app (old: `fielder-admin`, https://fielder-admin.fielder-worker.workers.dev) |
+| D1 | `openclapper-db`, `6d7ada22-afa6-4bb2-bd77-59e22d7cc36c` (WEUR; old: `fielder-db`, `b12cf742-e055-4f75-aa01-0cf73e36dc63`) |
+| R2 | `openclapper-media` (WEUR; old: `fielder-shots`) |
 | Zero Trust team | `weathered-salad-6072.cloudflareaccess.com` |
 | Access app for the admin plane | AUD `727fade57871978d220f144dd28ccd5d99cb5683aa4f736e8856a0a1bb6a2ed7`; policy: the owner's email, one-time PIN |
 | Android signing key | `CN=Fielder`, alias `fielder`, made 2026-10-19 (`scripts/keystore.sh`): `.secrets/android/` in the owner's public checkout + this repo's secrets + the owner's backup. The APK's `EXPO_PUBLIC_API_URL` = `APP_URL`. The Expo project `@bubulux/fielder` is no longer used |
 
 ## History
+
+- 2026-10-20: rename to OpenClapper. D1 and R2 copied to `openclapper-db` / `openclapper-media` (25 tables, 183 objects, verified identical); Workers redeploy as `openclapper-api` / `openclapper-admin` on openclapper.app / admin.openclapper.app (APP_DOMAIN/ADMIN_DOMAIN). The old Workers, `fielder-db` and `fielder-shots` stay as fallback until the new deploy is verified, then delete them. The installed APK still points at the old URL and is abandoned (next build uses APP_URL).
 
 - 2026-09-13: the service token early builds used was revoked; APKs from before then cannot reach the API.
 - 2026-10-18: multi-user foundation (epic bubulux/fielder#107) merged.
