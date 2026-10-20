@@ -9,7 +9,7 @@ on:
 
 jobs:
   build:
-    uses: OpenClapper-dev/core/.github/workflows/build-apk.yml@1fafcaf82f1ce4e1e34b8717d6e6c0db555118cc
+    uses: OpenClapper-dev/core/.github/workflows/build-apk.yml@a5030ffbc827a2fbb052f0241a15a376f0b29b4e
     with:
       path: fielder
     secrets: inherit
