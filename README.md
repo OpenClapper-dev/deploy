@@ -1,7 +1,7 @@
-# fielder-cloud
+# deploy
 
 The deployment of the reference Fielder instance. The product is the public repository
-[bubulux/fielder](https://github.com/bubulux/fielder), here as the `fielder/` submodule; this
+[OpenClapper-dev/core](https://github.com/OpenClapper-dev/core), here as the `fielder/` submodule; this
 repository only holds what is specific to this instance: its settings, its deploy pipeline, its notes,
 and later the hosted-only extensions (billing) plugged in through the auth seam.
 
@@ -44,7 +44,7 @@ Secrets (Settings → Secrets and variables → Actions):
 
 | Secret | |
 | --- | --- |
-| `CLOUDFLARE_API_TOKEN` | A Cloudflare API token with the permissions in [self-hosting](https://github.com/bubulux/fielder/blob/main/docs/self-hosting.md#1-a-cloudflare-api-token). Set |
+| `CLOUDFLARE_API_TOKEN` | A Cloudflare API token with the permissions in [self-hosting](https://github.com/OpenClapper-dev/core/blob/main/docs/self-hosting.md#1-a-cloudflare-api-token). Set |
 | `CLOUDFLARE_ACCOUNT_ID` | Set |
 | `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD` | The Android signing key for Build APK (made with `fielder/scripts/keystore.sh`). Set |
 
@@ -69,6 +69,6 @@ in `fielder/apps/worker/migrations/` before deploying.
 A module here (e.g. `hosted/provider.ts`) that exports `provider: AuthProvider` and wraps the
 first-party one, with billing checks in `allow`, goes live by setting the variable
 `AUTH_PROVIDER=../hosted/provider.ts` (relative to `fielder/`). See
-[the auth seam](https://github.com/bubulux/fielder/blob/main/apps/worker/src/authn/provider.ts).
+[the auth seam](https://github.com/OpenClapper-dev/core/blob/main/apps/worker/src/authn/provider.ts).
 
 Instance notes: [docs/instance.md](docs/instance.md).

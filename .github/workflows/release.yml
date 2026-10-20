@@ -45,7 +45,7 @@ jobs:
         run: |
           git -C fielder fetch -q --tags origin
           tag=$(git -C fielder tag -l 'v*' --sort=-v:refname | head -1)
-          [ -n "$tag" ] || { echo "No v* tag in bubulux/fielder" >&2; exit 1; }
+          [ -n "$tag" ] || { echo "No v* tag in OpenClapper-dev/core" >&2; exit 1; }
           old=$(git -C fielder rev-parse HEAD)
           new=$(git -C fielder rev-parse "$tag^{commit}")
           echo "tag=$tag" >> "$GITHUB_OUTPUT"
