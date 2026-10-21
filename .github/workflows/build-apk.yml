@@ -16,7 +16,7 @@ on:
 
 jobs:
   build:
-    uses: OpenClapper-dev/core/.github/workflows/build-apk.yml@6939dc2d52a4ce12312868a18901c44d6e3e2814
+    uses: OpenClapper-dev/core/.github/workflows/build-apk.yml@da4de677255f1b81ff49d9fa9c4e9362b2be40ce
     with:
       path: core
       variant: ${{ inputs.variant || 'release' }}
