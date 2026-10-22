@@ -1,4 +1,4 @@
-# The reference instance
+# The reference instances
 
 What the public docs no longer name (they describe any instance).
 
@@ -10,11 +10,27 @@ What the public docs no longer name (they describe any instance).
 | D1 | `openclapper-db`, `6d7ada22-afa6-4bb2-bd77-59e22d7cc36c` (WEUR; was `fielder-db`) |
 | R2 | `openclapper-media` (WEUR; was `fielder-shots`) |
 | Zero Trust team | `weathered-salad-6072.cloudflareaccess.com` |
-| Access app for the admin plane | AUD `727fade57871978d220f144dd28ccd5d99cb5683aa4f736e8856a0a1bb6a2ed7`; policy: the owner's email, one-time PIN |
+| Access app for the admin plane | "Fielder-Admin" (to be renamed "OpenClapper Admin" in the dashboard; its destinations still list the deleted Fielder admin Worker, which blocks an API update until removed), AUD `727fade57871978d220f144dd28ccd5d99cb5683aa4f736e8856a0a1bb6a2ed7`; the reusable policy "Owner auth" (`89f333bc-2657-4af2-8670-d32e8b943c45`): the owner's email, one-time PIN |
 | Android signing key | `CN=Fielder`, alias `fielder`, made 2026-10-19 (`scripts/keystore.sh`): `.secrets/android/` in the owner's public checkout + this repo's secrets + the owner's backup. The APK's `EXPO_PUBLIC_API_URL` = `APP_URL`. The Expo project `@bubulux/fielder` is no longer used |
+
+## Staging
+
+Being set up (#6): the names below are fixed, the ids follow the first deploy.
+
+| | |
+| --- | --- |
+| App | Worker `openclapper-staging-api`, https://staging.openclapper.app |
+| Admin plane | Worker `openclapper-staging-admin`, https://staging-admin.openclapper.app |
+| D1 | `openclapper-staging-db` (WEUR, `D1_LOCATION`); its id changes with every clone (deleted and created again by name) |
+| R2 | `openclapper-staging-media` |
+| Access app for the admin plane | its own application on staging-admin.openclapper.app, with the same reusable policy "Owner auth" as production; AUD in the `staging` environment |
+| Phone | "OpenClapper Staging", `org.openclapper.staging`, signed with the production key |
+
+After a clone, staging holds production's accounts and password hashes (sessions excepted), behind the same Access policy for its admin plane.
 
 ## History
 
+- 2026-10-22: staging planned (#2): its own resources in the same account, settings in the `staging` GitHub environment, workflows Deploy staging, Build APK staging, Clone production to staging.
 - 2026-10-20: v0.6.0, everything renamed to OpenClapper (#233). The phone app is now `org.openclapper` (a new app; the old Fielder app can be uninstalled), the submodule is `core/`, and Build APK takes `variant: dev` for the development client.
 
 - 2026-10-20: rename to OpenClapper. D1 and R2 copied to `openclapper-db` / `openclapper-media` (25 tables, 183 objects, verified identical); Workers redeploy as `openclapper-api` / `openclapper-admin` on openclapper.app / admin.openclapper.app (APP_DOMAIN/ADMIN_DOMAIN). Verified same day (both web clients + APK); the old Workers, `fielder-db` and `fielder-shots` were deleted on 2026-10-20. The installed APK still points at the old URL and is abandoned (next build uses APP_URL).

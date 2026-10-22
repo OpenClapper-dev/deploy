@@ -2,6 +2,7 @@
 # Moves the deployment to another version of the public repository: the core/ submodule and the
 # reusable workflows' refs, together, so the scripts and the workflow that runs them always match.
 #   scripts/bump.sh <tag|branch|commit>     e.g. scripts/bump.sh v0.2.0, scripts/bump.sh main
+# Only pinned commit refs are rewritten: the staging workflows' @main stays, since staging tracks main.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 ref="${1:?usage: scripts/bump.sh <tag|branch|commit>}"

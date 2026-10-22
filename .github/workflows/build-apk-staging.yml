@@ -1,0 +1,26 @@
+# Builds "OpenClapper Staging" (org.openclapper.staging, clay icon) for the staging instance's APP_URL,
+# signed with the same key as production: core's Build APK workflow on core's main (or the branch
+# given), with the `staging` environment. It installs next to the production app. The APK is the
+# run's artifact for 3 days.
+name: Build APK staging
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Branch, tag or commit of core to build
+        type: string
+        default: main
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    uses: OpenClapper-dev/core/.github/workflows/build-apk.yml@main
+    with:
+      path: core
+      variant: staging
+      environment: staging
+      ref: ${{ inputs.ref || 'main' }}
+    secrets: inherit

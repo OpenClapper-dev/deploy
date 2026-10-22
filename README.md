@@ -1,6 +1,6 @@
 # deploy
 
-The deployment of the reference Fielder instance. The product is the public repository
+The deployment of the reference OpenClapper instances, production and staging. The product is the public repository
 [OpenClapper-dev/core](https://github.com/OpenClapper-dev/core), here as the `core/` submodule; this
 repository only holds what is specific to this instance: its settings, its deploy pipeline, its notes,
 and later the hosted-only extensions (billing) plugged in through the auth seam.
@@ -34,9 +34,24 @@ submodule (no secrets). Ops scripts work the same way, e.g.
 Actions → **Build APK** → Run workflow: `expo prebuild` + Gradle on the GitHub runner, no Expo account.
 The APK is the run's artifact and is **deleted after 3 days** (this private repository has 500 MB of
 artifact storage; one APK is ~120 MB). It builds against `APP_URL` and signs with this instance's key
-(the `ANDROID_KEY*` secrets; the key itself and its passwords are in `.secrets/android/` and
-`.secrets/android.env` of the owner's public checkout, plus the owner's backup). Never make a new key:
-it cannot update the installed app.
+(the `ANDROID_KEY*` secrets; the key itself and its passwords are also in the owner's offline backup,
+nowhere else). Never make a new key: it cannot update the installed app.
+
+## Staging
+
+A second instance with its own Workers, D1, R2 and Access application, on
+[staging.openclapper.app](https://staging.openclapper.app) and staging-admin.openclapper.app. It tracks
+core's `main` (its workflows use `@main` and take a `ref` for a branch), and shows a clay "staging"
+badge in the Studio and the admin board. Its settings are the `staging` GitHub environment.
+
+- **Deploy staging**: core's `main` (or the `ref` given) to staging.
+- **Build APK staging**: "OpenClapper Staging" (`org.openclapper.staging`), next to the production app,
+  same signing key.
+- **Clone production to staging**: replaces staging with a 1:1 copy of production (R2, then D1;
+  sessions not copied), then deploys staging. Type `openclapper-staging-db` to confirm. Staging then holds
+  production's accounts and password hashes, behind the same Access policy for its admin plane.
+
+Before a release: Deploy staging on `main` (Clone first for a migration), click through, then release.
 
 ## Settings
 
@@ -50,7 +65,20 @@ Secrets (Settings → Secrets and variables → Actions):
 
 Variables: `D1_DATABASE_NAME`, `D1_DATABASE_ID`, `R2_BUCKET`, `APP_WORKER_NAME`, `ADMIN_WORKER_NAME`,
 `ACCESS_TEAM_DOMAIN`, `ADMIN_ACCESS_AUD`, `APP_URL` (Build APK), optionally `PBKDF2_ITERATIONS`,
-`AUTH_PROVIDER`. The same values are in [`deploy.env`](deploy.env); change both together.
+`AUTH_PROVIDER`. The same values are in [`deploy.env`](deploy.env); change both together. (Production
+moves to a `production` environment, and `deploy.env` goes, with the next core release: #7.)
+
+The `staging` environment (Settings → Environments) has the same names with staging's values:
+`D1_DATABASE_NAME=openclapper-staging-db`, `R2_BUCKET=openclapper-staging-media`,
+`APP_WORKER_NAME=openclapper-staging-api`, `ADMIN_WORKER_NAME=openclapper-staging-admin`,
+`APP_DOMAIN=staging.openclapper.app`, `ADMIN_DOMAIN=staging-admin.openclapper.app`,
+`APP_URL=https://staging.openclapper.app`, `ACCESS_TEAM_DOMAIN`, `ADMIN_ACCESS_AUD` (its own Access
+application), `INSTANCE_LABEL=staging`, `D1_LOCATION=weur`, and for the clone
+`SOURCE_D1_DATABASE_NAME=openclapper-db`, `SOURCE_R2_BUCKET=openclapper-media`. No `D1_DATABASE_ID`: the
+clone recreates the database, and the deploy finds it by name. Its secrets are the two R2 tokens of the
+clone: `SOURCE_R2_ACCESS_KEY_ID` / `SOURCE_R2_SECRET_ACCESS_KEY` (Object Read only on
+`openclapper-media`) and `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` (Object Read & Write on
+`openclapper-staging-media`). The Cloudflare token and the Android key are shared repository secrets.
 
 ## Updating
 
