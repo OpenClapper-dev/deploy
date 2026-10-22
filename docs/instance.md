@@ -15,21 +15,22 @@ What the public docs no longer name (they describe any instance).
 
 ## Staging
 
-Being set up (#6): the names below are fixed, the ids follow the first deploy.
+First deployed 2026-10-22 (#6) from core `main` (7ed7fca).
 
 | | |
 | --- | --- |
 | App | Worker `openclapper-staging-api`, https://staging.openclapper.app |
 | Admin plane | Worker `openclapper-staging-admin`, https://staging-admin.openclapper.app |
-| D1 | `openclapper-staging-db` (WEUR, `D1_LOCATION`); its id changes with every clone (deleted and created again by name) |
+| D1 | `openclapper-staging-db` (WEUR, `D1_LOCATION`), first id `a6047bce-a3e6-413d-b510-30c1cb923498`; the id changes with every clone (deleted and created again by name), so it is never pinned |
 | R2 | `openclapper-staging-media` |
-| Access app for the admin plane | its own application on staging-admin.openclapper.app, with the same reusable policy "Owner auth" as production; AUD in the `staging` environment |
+| Access app for the admin plane | "OpenClapper Admin (staging)" (`31edf42f-26b0-44a5-bf5e-5d687239c570`), AUD `b5992eb5c9f1571536a58f276a33829a19f4a71ebfc36e6b4ce690b4f129966e`, the same reusable policy "Owner auth" and login method as production, 24 h sessions |
 | Phone | "OpenClapper Staging", `org.openclapper.staging`, signed with the production key |
 
 After a clone, staging holds production's accounts and password hashes (sessions excepted), behind the same Access policy for its admin plane.
 
 ## History
 
+- 2026-10-22: the repository went public with GitHub environments; production's settings left the repository variables (all but `APP_URL`), so the `staging` environment cannot inherit them, and production reads them from `deploy.env` until #7. Staging deployed twice (resources, then its Access application) and serves staging.openclapper.app; no accounts until the first clone.
 - 2026-10-22: staging planned (#2): its own resources in the same account, settings in the `staging` GitHub environment, workflows Deploy staging, Build APK staging, Clone production to staging.
 - 2026-10-20: v0.6.0, everything renamed to OpenClapper (#233). The phone app is now `org.openclapper` (a new app; the old Fielder app can be uninstalled), the submodule is `core/`, and Build APK takes `variant: dev` for the development client.
 
