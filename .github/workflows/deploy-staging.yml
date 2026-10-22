@@ -1,0 +1,24 @@
+# Deploys the staging instance: core's Deploy workflow on core's main (or the branch given), with the
+# `staging` GitHub environment's variables and secrets. Staging tracks main on purpose: it is where main
+# is tried before a release. scripts/bump.sh only rewrites pinned commit refs, so @main stays.
+name: Deploy staging
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Branch, tag or commit of core to deploy
+        type: string
+        default: main
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    uses: OpenClapper-dev/core/.github/workflows/deploy.yml@main
+    with:
+      path: core
+      environment: staging
+      ref: ${{ inputs.ref || 'main' }}
+    secrets: inherit
