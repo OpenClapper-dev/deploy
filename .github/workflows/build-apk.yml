@@ -16,7 +16,7 @@ on:
 
 jobs:
   build:
-    uses: OpenClapper-dev/core/.github/workflows/build-apk.yml@4fe2bcf41fbc1da8922dbae6fde5c963a3dabd3c
+    uses: OpenClapper-dev/core/.github/workflows/build-apk.yml@46ece2790245247bd96ad3eac7bae47f92238a01
     with:
       path: core
       environment: production
