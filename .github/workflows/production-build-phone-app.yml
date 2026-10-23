@@ -17,7 +17,7 @@ on:
 
 jobs:
   build:
-    uses: OpenClapper-dev/core/.github/workflows/build-phone-app.yml@b52c1ad27ec27f1f7ed8f1345a592e98dac58c0f
+    uses: OpenClapper-dev/core/.github/workflows/build-phone-app.yml@4df9396e1fa5491f68ae7beb1c3c8601d5dd9e39
     with:
       path: core
       environment: production
