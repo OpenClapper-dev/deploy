@@ -1,0 +1,25 @@
+# Deploys the staging server: D1 migrations, the app Worker (API + Studio) and the admin plane, with
+# core's Deploy server workflow on core's main (or the branch given) and the staging environment.
+# Staging tracks main on purpose: it is where main is tried before a release. scripts/bump.sh only
+# rewrites pinned commit refs, so @main stays.
+name: Staging · Deploy server
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Branch, tag or commit of core to deploy
+        type: string
+        default: main
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    uses: OpenClapper-dev/core/.github/workflows/deploy-server.yml@main
+    with:
+      path: core
+      environment: staging
+      ref: ${{ inputs.ref || 'main' }}
+    secrets: inherit

@@ -1,8 +1,8 @@
-# Replaces staging with a 1:1 copy of production (R2, then D1; sessions not copied), then deploys
-# staging, which applies the migrations main has on top. Everything staging held is gone afterwards;
-# production is only read. Type the staging database's name to confirm. Settings: the `staging`
-# environment (SOURCE_* variables, both R2 tokens; README.md).
-name: Clone production to staging
+# Replaces staging with a 1:1 copy of production (core's Clone instance: R2, then D1; sessions not
+# copied), then deploys the staging server, which applies the migrations main has on top. Everything
+# staging held is gone afterwards; production is only read. Type the staging database's name to
+# confirm. Settings: the staging environment (SOURCE_* variables, both R2 tokens; README.md).
+name: Staging · Reset from production
 
 on:
   workflow_dispatch:
@@ -21,7 +21,7 @@ permissions:
 
 jobs:
   clone:
-    uses: OpenClapper-dev/core/.github/workflows/clone.yml@main
+    uses: OpenClapper-dev/core/.github/workflows/clone-instance.yml@main
     with:
       path: core
       environment: staging
@@ -32,7 +32,7 @@ jobs:
   # Right after: the clone recreated the database, and the Workers are bound to the old one until then.
   deploy:
     needs: clone
-    uses: OpenClapper-dev/core/.github/workflows/deploy.yml@main
+    uses: OpenClapper-dev/core/.github/workflows/deploy-server.yml@main
     with:
       path: core
       environment: staging

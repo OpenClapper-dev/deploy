@@ -1,0 +1,16 @@
+# Deploys the production server: D1 migrations, the app Worker (API + Studio) and the admin plane, with
+# core's Deploy server workflow on the version the core/ submodule is pinned to (scripts/bump.sh keeps
+# the two refs equal). Manual only: the owner deploys; Production · Release runs it too. Settings: the
+# production environment and the repository's shared secrets (README.md).
+name: Production · Deploy server
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    uses: OpenClapper-dev/core/.github/workflows/deploy.yml@46ece2790245247bd96ad3eac7bae47f92238a01
+    with:
+      path: core
+      environment: production
+    secrets: inherit

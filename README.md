@@ -5,31 +5,46 @@ The deployment of the reference OpenClapper instances, production and staging. T
 repository only holds what is specific to this instance: its settings, its deploy pipeline, its notes,
 and later the hosted-only extensions (billing) plugged in through the auth seam.
 
+## Workflows
+
+All manual, named by instance first:
+
+| Workflow | What it does |
+| --- | --- |
+| **Production · Release** | the newest core release live: bump, Deploy server, Build phone app with the Play upload |
+| **Production · Deploy server** | D1 migrations, the app Worker (API + Studio), the admin plane, on the pinned core |
+| **Production · Build phone app** | APK + App Bundle with the production key; `track: internal` uploads to Play |
+| **Staging · Deploy server** | the same for staging, on core's `main` or a `ref` |
+| **Staging · Build phone app** | "OpenClapper Staging", APK + App Bundle; `track: internal` uploads to Play |
+| **Staging · Reset from production** | staging replaced by a copy of production, then deployed |
+
+The development client is not built here: it needs no deployment (core's Build phone app, `variant: dev`).
+
 ## Release (one button)
 
-Actions → **Release** → Run workflow puts the newest release of the public repository live:
+Actions → **Production · Release** → Run workflow puts the newest release of the public repository live:
 1. It finds the newest `v*` tag, pre-releases included.
 2. It moves this repository to that tag (`scripts/bump.sh`, committed and pushed by the bot).
-3. It runs **Deploy**, waits for it to go green, then runs **Build APK** with `track: internal`: the bundle
+3. It runs **Production · Deploy server**, waits for it to go green, then runs **Production · Build phone app** with `track: internal`: the bundle
    goes to the production app's internal track on Google Play, and Play updates the testers' phones.
    Pressed again on the same version, the upload is skipped with a notice.
 
 When the tag is already pinned, it still deploys and builds. New D1 migrations stop it, with the list in the run's summary; review them, then run it again with **Apply new migrations** ticked. The two runs it starts are linked in its summary.
 
-It needs the secret `RELEASE_TOKEN`, because the bump rewrites the workflow files' pinned refs and a run's own token may never push workflow files. Create a fine-grained personal access token for **this repository only**, with Contents and Workflows set to Read and write, and store it as that secret. When it expires, Release stops at its first step and says so.
+It needs the secret `RELEASE_TOKEN`, because the bump rewrites the workflow files' pinned refs and a run's own token may never push workflow files. Create a fine-grained personal access token for **this repository only**, with Contents and Workflows set to Read and write, and store it as that secret. When it expires, Production · Release stops at its first step and says so.
 
-## Deploy
+## Deploy server
 
-Actions → **Deploy** → Run workflow. It runs the public repository's Deploy workflow on the pinned
-version: provision (no-op once D1 and R2 exist), D1 migrations, the app Worker (API + dashboard), the
-admin plane. Deploying is always a manual step.
+Actions → **Production · Deploy server** → Run workflow. It runs core's Deploy server workflow on the
+pinned version: provision (no-op once D1 and R2 exist), D1 migrations, the app Worker (API + Studio),
+the admin plane. Deploying is always a manual step.
 
 There is no local deploy: every setting lives in GitHub (the `production` and `staging` environments, the
 shared secrets), and core reads them from the run's environment only.
 
 ## Phone app
 
-Actions → **Build APK** → Run workflow: `expo prebuild` + Gradle on the GitHub runner, no Expo account.
+Actions → **Production · Build phone app** → Run workflow: `expo prebuild` + Gradle on the GitHub runner, no Expo account.
 It builds against the `production` environment's `APP_URL`, signs with that environment's key, and leaves
 an APK (for sideloading) and an App Bundle (for Google Play) as the run's artifacts for 3 days. With
 `track: internal` the bundle also goes to the production app's internal track; the Release button does
@@ -43,15 +58,15 @@ A second instance with its own Workers, D1, R2 and Access application, on
 core's `main` (its workflows use `@main` and take a `ref` for a branch), and shows a clay "staging"
 badge in the Studio and the admin board. Its settings are the `staging` GitHub environment.
 
-- **Deploy staging**: core's `main` (or the `ref` given) to staging.
-- **Build APK staging**: "OpenClapper Staging" (`org.openclapper.staging`), next to the production app,
+- **Staging · Deploy server**: core's `main` (or the `ref` given) to staging.
+- **Staging · Build phone app**: "OpenClapper Staging" (`org.openclapper.staging`), next to the production app,
   as an APK and an App Bundle; with `track: internal` the bundle also goes to the staging app's internal
   track on Google Play (#8). Its version code is the commit count of core's `main`.
-- **Clone production to staging**: replaces staging with a 1:1 copy of production (R2, then D1;
+- **Staging · Reset from production**: replaces staging with a 1:1 copy of production (R2, then D1;
   sessions not copied), then deploys staging. Type `openclapper-staging-db` to confirm. Staging then holds
   production's accounts and password hashes, behind the same Access policy for its admin plane.
 
-Before a release: Deploy staging on `main` (Clone first for a migration), click through, then release.
+Before a release: Staging · Deploy server on `main` (Staging · Reset from production first for a migration), click through, then release.
 
 ## Settings
 

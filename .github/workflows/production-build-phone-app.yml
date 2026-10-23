@@ -1,0 +1,26 @@
+# Builds the production phone app: core's Build phone app workflow, run on the version the core/
+# submodule is pinned to (scripts/bump.sh keeps the refs equal). expo prebuild + Gradle on the runner,
+# signed with the production key (its upload key on Google Play); the APK and the App Bundle are the
+# run's artifacts for 3 days. With track: internal the bundle also goes to the production app's internal
+# track (PLAY_SERVICE_ACCOUNT_JSON); Production · Release does that by itself. Settings: the production
+# environment (README.md). The development client is built in core itself (its Build phone app, variant dev).
+name: Production · Build phone app
+
+on:
+  workflow_dispatch:
+    inputs:
+      track:
+        description: Also upload the bundle to this Google Play track of the production app
+        type: choice
+        options: [none, internal]
+        default: none
+
+jobs:
+  build:
+    uses: OpenClapper-dev/core/.github/workflows/build-apk.yml@46ece2790245247bd96ad3eac7bae47f92238a01
+    with:
+      path: core
+      environment: production
+      variant: release
+      track: ${{ inputs.track || 'none' }}
+    secrets: inherit

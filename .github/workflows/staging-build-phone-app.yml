@@ -1,9 +1,8 @@
 # Builds "OpenClapper Staging" (org.openclapper.staging, clay icon) for the staging instance's APP_URL,
-# signed with the same key as production: core's Build APK workflow on core's main (or the branch
-# given), with the `staging` environment. It installs next to the production app. The APK is the
-# run's artifact for 3 days, next to the App Bundle. With track: internal, the bundle also goes to the
-# staging app's internal track on Google Play (needs PLAY_SERVICE_ACCOUNT_JSON in the staging environment).
-name: Build APK staging
+# signed with the staging key (its upload key on Google Play): core's Build phone app workflow on core's
+# main (or the branch given), with the staging environment. The APK and the App Bundle are the run's
+# artifacts for 3 days; with track: internal the bundle also goes to the staging app's internal track.
+name: Staging · Build phone app
 
 on:
   workflow_dispatch:
@@ -23,7 +22,7 @@ permissions:
 
 jobs:
   build:
-    uses: OpenClapper-dev/core/.github/workflows/build-apk.yml@main
+    uses: OpenClapper-dev/core/.github/workflows/build-phone-app.yml@main
     with:
       path: core
       variant: staging
