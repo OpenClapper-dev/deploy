@@ -30,10 +30,11 @@ shared secrets), and core reads them from the run's environment only.
 ## Phone app
 
 Actions → **Build APK** → Run workflow: `expo prebuild` + Gradle on the GitHub runner, no Expo account.
-The APK is the run's artifact and is **deleted after 3 days** (this private repository has 500 MB of
-artifact storage; one APK is ~120 MB). It builds against `APP_URL` and signs with this instance's key
-(the `ANDROID_KEY*` secrets of the environment; the key itself and its passwords are also in the owner's Bitwarden,
-nowhere else). Never make a new key: it cannot update the installed app.
+It builds against the `production` environment's `APP_URL`, signs with that environment's key, and leaves
+an APK (for sideloading) and an App Bundle (for Google Play) as the run's artifacts for 3 days. With
+`track: internal` the bundle also goes to the production app's internal track; the Release button does
+that by itself. Phones get the app from Play: an APK from here is signed with the upload key, Play's
+install with Google's key, so the two cannot update each other (uninstall to switch).
 
 ## Staging
 
