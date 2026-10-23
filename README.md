@@ -22,12 +22,8 @@ Actions → **Deploy** → Run workflow. It runs the public repository's Deploy 
 version: provision (no-op once D1 and R2 exist), D1 migrations, the app Worker (API + dashboard), the
 admin plane. Deploying is always a manual step.
 
-From a machine instead, in this repository (`git submodule update --init`, then `pnpm -C core install`):
-`pnpm -C core/apps/worker migrate:remote`, `pnpm -C core/apps/worker run deploy`,
-`pnpm -C core/apps/admin run deploy`. They read [`deploy.env`](deploy.env) here, beside the
-submodule (no secrets). Ops scripts work the same way, e.g.
-`node core/scripts/user.mjs --email … --remote`. Wrangler needs `CLOUDFLARE_API_TOKEN` or
-`pnpm -C core exec wrangler login --device`.
+There is no local deploy: every setting lives in GitHub (the `production` and `staging` environments, the
+shared secrets), and core reads them from the run's environment only.
 
 ## Phone app
 
@@ -55,7 +51,7 @@ Before a release: Deploy staging on `main` (Clone first for a migration), click 
 
 ## Settings
 
-Secrets (Settings → Secrets and variables → Actions):
+Shared secrets (Settings → Secrets and variables → Actions), used by both instances:
 
 | Secret | |
 | --- | --- |
@@ -63,12 +59,17 @@ Secrets (Settings → Secrets and variables → Actions):
 | `CLOUDFLARE_ACCOUNT_ID` | Set |
 | `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD` | The Android signing key for Build APK (made with `core/scripts/keystore.sh`). Set |
 
-Variables: `D1_DATABASE_NAME`, `D1_DATABASE_ID`, `R2_BUCKET`, `APP_WORKER_NAME`, `ADMIN_WORKER_NAME`,
-`ACCESS_TEAM_DOMAIN`, `ADMIN_ACCESS_AUD`, `APP_URL` (Build APK), optionally `PBKDF2_ITERATIONS`,
-`AUTH_PROVIDER`. The same values are in [`deploy.env`](deploy.env); change both together. (Production
-moves to a `production` environment, and `deploy.env` goes, with the next core release: #7.)
+`CF_ANALYTICS_TOKEN` (read-only analytics for the admin boards) and `RELEASE_TOKEN` (Release) are shared
+secrets too. There are **no repository variables**: a repository variable reaches every environment that
+does not set the same name, which is how staging could end up on production's database.
 
-The `staging` environment (Settings → Environments) has the same names with staging's values:
+The `production` environment (Settings → Environments, `main` only): `D1_DATABASE_NAME=openclapper-db`,
+`D1_DATABASE_ID`, `R2_BUCKET=openclapper-media`, `APP_WORKER_NAME=openclapper-api`,
+`ADMIN_WORKER_NAME=openclapper-admin`, `APP_DOMAIN=openclapper.app`, `ADMIN_DOMAIN=admin.openclapper.app`,
+`APP_URL=https://openclapper.app`, `ACCESS_TEAM_DOMAIN`, `ADMIN_ACCESS_AUD`, `D1_LOCATION=weur`; optionally
+`PBKDF2_ITERATIONS`, `AUTH_PROVIDER`. The ids are in [docs/instance.md](docs/instance.md).
+
+The `staging` environment (Settings → Environments, `main` only) has the same names with staging's values:
 `D1_DATABASE_NAME=openclapper-staging-db`, `R2_BUCKET=openclapper-staging-media`,
 `APP_WORKER_NAME=openclapper-staging-api`, `ADMIN_WORKER_NAME=openclapper-staging-admin`,
 `APP_DOMAIN=staging.openclapper.app`, `ADMIN_DOMAIN=staging-admin.openclapper.app`,

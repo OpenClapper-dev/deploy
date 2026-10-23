@@ -16,8 +16,9 @@ on:
 
 jobs:
   build:
-    uses: OpenClapper-dev/core/.github/workflows/build-apk.yml@da4de677255f1b81ff49d9fa9c4e9362b2be40ce
+    uses: OpenClapper-dev/core/.github/workflows/build-apk.yml@4fe2bcf41fbc1da8922dbae6fde5c963a3dabd3c
     with:
       path: core
+      environment: production
       variant: ${{ inputs.variant || 'release' }}
     secrets: inherit

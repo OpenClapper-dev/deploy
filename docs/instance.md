@@ -10,8 +10,8 @@ What the public docs no longer name (they describe any instance).
 | D1 | `openclapper-db`, `6d7ada22-afa6-4bb2-bd77-59e22d7cc36c` (WEUR; was `fielder-db`) |
 | R2 | `openclapper-media` (WEUR; was `fielder-shots`) |
 | Zero Trust team | `weathered-salad-6072.cloudflareaccess.com` |
-| Access app for the admin plane | "Fielder-Admin" (to be renamed "OpenClapper Admin" in the dashboard; its destinations still list the deleted Fielder admin Worker, which blocks an API update until removed), AUD `727fade57871978d220f144dd28ccd5d99cb5683aa4f736e8856a0a1bb6a2ed7`; the reusable policy "Owner auth" (`89f333bc-2657-4af2-8670-d32e8b943c45`): the owner's email, one-time PIN |
-| Android signing key | `CN=Fielder`, alias `fielder`, made 2026-10-19 (`scripts/keystore.sh`): `.secrets/android/` in the owner's public checkout + this repo's secrets + the owner's backup. The APK's `EXPO_PUBLIC_API_URL` = `APP_URL`. The Expo project `@bubulux/fielder` is no longer used |
+| Access app for the admin plane | "OpenClapper Admin" (`9df75d75-ee5b-463a-8387-88925b5abcbb`, renamed from "Fielder-Admin" 2026-10-23, the deleted Fielder Worker's destination removed), AUD `727fade57871978d220f144dd28ccd5d99cb5683aa4f736e8856a0a1bb6a2ed7`; the reusable policy "Owner auth" (`89f333bc-2657-4af2-8670-d32e8b943c45`): the owner's email, one-time PIN |
+| Android signing key | `CN=Fielder`, alias `fielder`, made 2026-10-19: this repository's shared `ANDROID_KEY*` secrets and the owner's backup. To be replaced by new keys for production and staging (owner, planned 2026-10-23). The APK's `EXPO_PUBLIC_API_URL` = the environment's `APP_URL` |
 
 ## Staging
 
@@ -30,6 +30,7 @@ After a clone, staging holds production's accounts and password hashes (sessions
 
 ## History
 
+- 2026-10-23: v0.10.0. Production moved to the `production` GitHub environment; `deploy.env` and the last repository variable (`APP_URL`) are gone (#7). Access app renamed "OpenClapper Admin". The owner plans new signing keys for production and staging (the old one is `CN=Fielder`); installs from the old key are replaced once.
 - 2026-10-22: the repository went public with GitHub environments; production's settings left the repository variables (all but `APP_URL`), so the `staging` environment cannot inherit them, and production reads them from `deploy.env` until #7. Staging deployed twice (resources, then its Access application) and serves staging.openclapper.app; no accounts until the first clone.
 - 2026-10-22: staging planned (#2): its own resources in the same account, settings in the `staging` GitHub environment, workflows Deploy staging, Build APK staging, Clone production to staging.
 - 2026-10-20: v0.6.0, everything renamed to OpenClapper (#233). The phone app is now `org.openclapper` (a new app; the old Fielder app can be uninstalled), the submodule is `core/`, and Build APK takes `variant: dev` for the development client.
@@ -42,8 +43,6 @@ After a clone, staging holds production's accounts and password hashes (sessions
 - 2026-10-19: `deploy.env` moved here from the public checkout; the public Makefile has no deploy targets any more (bubulux/fielder#131). APK builds via Build APK (bubulux/fielder#132).
 - 2026-10-19: EAS removed (bubulux/fielder#135): builds are `expo prebuild` + Gradle with this instance's own key. APKs from before were signed by an EAS-generated key, so the first own-key APK needs one uninstall of the old app. One product version and releases (bubulux/fielder#136).
 
-## Local
+## Settings
 
-`.secrets/` in the public checkout (gitignored) holds `access-app.json`, a short-lived Cloudflare API
-token used only for Access administration from the CLI, and the pre-0021 database backup. The
-instance's settings are in [`deploy.env`](../deploy.env) here.
+The `production` and `staging` GitHub environments of this repository (README.md). Nothing local.

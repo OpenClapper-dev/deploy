@@ -1,6 +1,6 @@
 # Deploys the reference instance: the public repository's Deploy workflow, run on the version the
 # core/ submodule is pinned to (scripts/bump.sh keeps the two refs equal). Manual only: the owner
-# deploys. Settings are this repository's secrets and variables (README.md).
+# deploys. Settings are the `production` GitHub environment and the repository's shared secrets (README.md).
 name: Deploy
 
 on:
@@ -8,7 +8,8 @@ on:
 
 jobs:
   deploy:
-    uses: OpenClapper-dev/core/.github/workflows/deploy.yml@da4de677255f1b81ff49d9fa9c4e9362b2be40ce
+    uses: OpenClapper-dev/core/.github/workflows/deploy.yml@4fe2bcf41fbc1da8922dbae6fde5c963a3dabd3c
     with:
       path: core
+      environment: production
     secrets: inherit
