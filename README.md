@@ -10,7 +10,9 @@ and later the hosted-only extensions (billing) plugged in through the auth seam.
 Actions → **Release** → Run workflow puts the newest release of the public repository live:
 1. It finds the newest `v*` tag, pre-releases included.
 2. It moves this repository to that tag (`scripts/bump.sh`, committed and pushed by the bot).
-3. It runs **Deploy**, waits for it to go green, then runs **Build APK**.
+3. It runs **Deploy**, waits for it to go green, then runs **Build APK** with `track: internal`: the bundle
+   goes to the production app's internal track on Google Play, and Play updates the testers' phones.
+   Pressed again on the same version, the upload is skipped with a notice.
 
 When the tag is already pinned, it still deploys and builds. New D1 migrations stop it, with the list in the run's summary; review them, then run it again with **Apply new migrations** ticked. The two runs it starts are linked in its summary.
 

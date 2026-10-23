@@ -1,8 +1,9 @@
 # Builds the phone app for the reference instance: the public repository's Build APK workflow, run on
 # the version the core/ submodule is pinned to (scripts/bump.sh keeps the refs equal). expo prebuild
-# + Gradle on the runner, signed with this instance's key; the APK is the run's artifact for 3 days.
-# Needs the four ANDROID_KEY* secrets and the APP_URL variable (README.md); variant=dev builds the
-# development client instead (no key or server needed).
+# + Gradle on the runner, signed with the production key (its upload key on Google Play); the APK and
+# the App Bundle are the run's artifacts for 3 days. With track: internal the bundle also goes to the
+# production app's internal track (PLAY_SERVICE_ACCOUNT_JSON). Settings: the production environment
+# (README.md); variant=dev builds the development client instead (no key or server needed).
 name: Build APK
 
 on:
@@ -13,6 +14,11 @@ on:
         type: choice
         options: [release, dev]
         default: release
+      track:
+        description: Also upload the bundle to this Google Play track of the production app (release only)
+        type: choice
+        options: [none, internal]
+        default: none
 
 jobs:
   build:
@@ -21,4 +27,5 @@ jobs:
       path: core
       environment: production
       variant: ${{ inputs.variant || 'release' }}
+      track: ${{ inputs.track || 'none' }}
     secrets: inherit

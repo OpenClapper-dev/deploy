@@ -1,6 +1,7 @@
-# One button for "the newest Fielder release is live": finds the newest v* tag of the public
+# One button for "the newest OpenClapper release is live": finds the newest v* tag of the public
 # repository, moves the deployment to it (scripts/bump.sh, committed and pushed), then runs Deploy and,
-# once that is green, Build APK. Already on the newest tag: deploys and builds anyway, so a press always
+# once that is green, Build APK with track: internal (the bundle goes to the production app's internal
+# track on Google Play; a version code Play already has is a notice, not a failure). Already on the newest tag: deploys and builds anyway, so a press always
 # ends with that version live. New D1 migrations stop it (listed in the run's summary) until it is run
 # again with "Apply new migrations" ticked. Manual only.
 # The bump rewrites the workflow files' pinned refs, which this run's own token may never push, so the
@@ -81,7 +82,7 @@ jobs:
           run() {
             local wf=$1 since id=""
             since=$(date -u +%Y-%m-%dT%H:%M:%SZ)
-            gh workflow run "$wf" --ref main
+            gh workflow run "$wf" --ref main "${@:2}"
             for _ in $(seq 1 30); do
               id=$(gh run list --workflow "$wf" --event workflow_dispatch --limit 5 --json databaseId,createdAt \
                 --jq "[.[] | select(.createdAt >= \"$since\")][0].databaseId // empty")
@@ -93,5 +94,5 @@ jobs:
             gh run watch "$id" --exit-status --interval 30 > /dev/null
           }
           run deploy.yml
-          run build-apk.yml
-          echo "**${{ steps.tag.outputs.tag }}** deployed; the APK is the Build APK run's artifact." >> "$GITHUB_STEP_SUMMARY"
+          run build-apk.yml -f track=internal
+          echo "**${{ steps.tag.outputs.tag }}** deployed and on Google Play's internal track (production app); the APK is the Build APK run's artifact." >> "$GITHUB_STEP_SUMMARY"
