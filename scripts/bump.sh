@@ -11,4 +11,4 @@ sha=$(git -C core rev-parse --verify "origin/$ref^{commit}" 2>/dev/null || git -
 git -C core checkout -q "$sha"
 sed -i -E "s#(uses: OpenClapper-dev/core/\.github/workflows/[a-z-]+\.yml@)[0-9a-f]+#\1$sha#" .github/workflows/*.yml
 git add core .github/workflows
-echo "core → $ref ($sha). Review the migrations in core/apps/worker/migrations, commit, push, then run Deploy."
+echo "core → $ref ($sha). Review the migrations in core/apps/worker/migrations, commit, push, then run Production · Deploy server (or Production · Release)."
