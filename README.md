@@ -42,7 +42,8 @@ badge in the Studio and the admin board. Its settings are the `staging` GitHub e
 
 - **Deploy staging**: core's `main` (or the `ref` given) to staging.
 - **Build APK staging**: "OpenClapper Staging" (`org.openclapper.staging`), next to the production app,
-  same signing key.
+  as an APK and an App Bundle; with `track: internal` the bundle also goes to the staging app's internal
+  track on Google Play (#8). Its version code is the commit count of core's `main`.
 - **Clone production to staging**: replaces staging with a 1:1 copy of production (R2, then D1;
   sessions not copied), then deploys staging. Type `openclapper-staging-db` to confirm. Staging then holds
   production's accounts and password hashes, behind the same Access policy for its admin plane.
