@@ -1,8 +1,8 @@
-# Replaces staging with a 1:1 copy of production (core's Clone instance: R2, then D1; sessions not
-# copied), then deploys the staging server, which applies the migrations main has on top. Everything
-# staging held is gone afterwards; production is only read. Type the staging database's name to
-# confirm. Settings: the staging environment (SOURCE_* variables, both R2 tokens; README.md).
-name: Staging · Reset from production
+# Recreates staging from production: a 1:1 copy of production replaces everything staging held (core's
+# Clone instance: R2, then D1; sessions not copied), then the staging server is deployed, which applies
+# the migrations main has on top. Production is only read. Type the staging database's name to confirm.
+# Settings: the staging environment (SOURCE_* variables, both R2 tokens; README.md).
+name: Staging · Recreate from production
 
 on:
   workflow_dispatch:

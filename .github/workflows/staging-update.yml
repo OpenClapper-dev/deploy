@@ -1,0 +1,42 @@
+# Puts core's main (or the branch given) on staging, server and phone app together: Staging · Deploy
+# server, then Staging · Build phone app with the upload to the staging app's internal track on Google
+# Play, so both come from the same commit. Staging's data stays as it is; replacing it with a copy of
+# production is the separate Staging · Recreate from production.
+name: Staging · Update
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Branch, tag or commit of core to put on staging
+        type: string
+        default: main
+      track:
+        description: Upload the staging app to this Google Play track (none builds it without uploading)
+        type: choice
+        options: [internal, none]
+        default: internal
+
+permissions:
+  contents: read
+
+jobs:
+  server:
+    uses: OpenClapper-dev/core/.github/workflows/deploy-server.yml@main
+    with:
+      path: core
+      environment: staging
+      ref: ${{ inputs.ref || 'main' }}
+    secrets: inherit
+
+  # Only after the server is live, so the app never talks to an older API than it was built for.
+  phone-app:
+    needs: server
+    uses: OpenClapper-dev/core/.github/workflows/build-phone-app.yml@main
+    with:
+      path: core
+      variant: staging
+      environment: staging
+      ref: ${{ inputs.ref || 'main' }}
+      track: ${{ inputs.track || 'internal' }}
+    secrets: inherit

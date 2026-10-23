@@ -14,9 +14,10 @@ All manual, named by instance first:
 | **Production · Release** | the newest core release live: bump, Deploy server, Build phone app with the Play upload |
 | **Production · Deploy server** | D1 migrations, the app Worker (API + Studio), the admin plane, on the pinned core |
 | **Production · Build phone app** | APK + App Bundle with the production key; `track: internal` uploads to Play |
+| **Staging · Update** | core's `main` (or a `ref`) on staging: Deploy server, then Build phone app with the Play upload; staging's data stays |
 | **Staging · Deploy server** | the same for staging, on core's `main` or a `ref` |
 | **Staging · Build phone app** | "OpenClapper Staging", APK + App Bundle; `track: internal` uploads to Play |
-| **Staging · Reset from production** | staging replaced by a copy of production, then deployed |
+| **Staging · Recreate from production** | staging rebuilt as a copy of production (production only read), then deployed |
 
 The development client is not built here: it needs no deployment (core's Build phone app, `variant: dev`).
 
@@ -58,15 +59,17 @@ A second instance with its own Workers, D1, R2 and Access application, on
 core's `main` (its workflows use `@main` and take a `ref` for a branch), and shows a clay "staging"
 badge in the Studio and the admin board. Its settings are the `staging` GitHub environment.
 
+- **Staging · Update**: core's `main` (or the `ref` given) on staging, server first, then the app with the
+  upload to the internal track. Staging's data stays as it is, to see how new code behaves on it.
 - **Staging · Deploy server**: core's `main` (or the `ref` given) to staging.
 - **Staging · Build phone app**: "OpenClapper Staging" (`org.openclapper.staging`), next to the production app,
   as an APK and an App Bundle; with `track: internal` the bundle also goes to the staging app's internal
   track on Google Play (#8). Its version code is the commit count of core's `main`.
-- **Staging · Reset from production**: replaces staging with a 1:1 copy of production (R2, then D1;
+- **Staging · Recreate from production**: replaces staging with a 1:1 copy of production (R2, then D1;
   sessions not copied), then deploys staging. Type `openclapper-staging-db` to confirm. Staging then holds
   production's accounts and password hashes, behind the same Access policy for its admin plane.
 
-Before a release: Staging · Deploy server on `main` (Staging · Reset from production first for a migration), click through, then release.
+Before a release: Staging · Update on `main` (Staging · Recreate from production first, to try a migration on production's data), click through, then release.
 
 ## Settings
 
