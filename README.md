@@ -32,7 +32,7 @@ shared secrets), and core reads them from the run's environment only.
 Actions → **Build APK** → Run workflow: `expo prebuild` + Gradle on the GitHub runner, no Expo account.
 The APK is the run's artifact and is **deleted after 3 days** (this private repository has 500 MB of
 artifact storage; one APK is ~120 MB). It builds against `APP_URL` and signs with this instance's key
-(the `ANDROID_KEY*` secrets; the key itself and its passwords are also in the owner's offline backup,
+(the `ANDROID_KEY*` secrets of the environment; the key itself and its passwords are also in the owner's Bitwarden,
 nowhere else). Never make a new key: it cannot update the installed app.
 
 ## Staging
@@ -60,7 +60,6 @@ Shared secrets (Settings → Secrets and variables → Actions), used by both in
 | --- | --- |
 | `CLOUDFLARE_API_TOKEN` | A Cloudflare API token with the permissions in [self-hosting](https://github.com/OpenClapper-dev/core/blob/main/docs/self-hosting.md#1-a-cloudflare-api-token). Set |
 | `CLOUDFLARE_ACCOUNT_ID` | Set |
-| `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD` | The Android signing key for Build APK (made with `core/scripts/keystore.sh`). Set |
 
 `CF_ANALYTICS_TOKEN` (read-only analytics for the admin boards) and `RELEASE_TOKEN` (Release) are shared
 secrets too. There are **no repository variables**: a repository variable reaches every environment that
@@ -82,7 +81,15 @@ application), `INSTANCE_LABEL=staging`, `D1_LOCATION=weur`, and for the clone
 clone recreates the database, and the deploy finds it by name. Its secrets are the two R2 tokens of the
 clone: `SOURCE_R2_ACCESS_KEY_ID` / `SOURCE_R2_SECRET_ACCESS_KEY` (Object Read only on
 `openclapper-media`) and `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` (Object Read & Write on
-`openclapper-staging-media`). The Cloudflare token and the Android key are shared repository secrets.
+`openclapper-staging-media`). The Cloudflare token is a shared repository secret.
+
+Per environment, `production` and `staging` each have their own secrets for the phone app: the Android
+key (`ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD`;
+the app's upload key on Google Play, which signs with a Google-generated key) and
+`PLAY_SERVICE_ACCOUNT_JSON` (the key of that app's own service account, `play-uploader-production` or
+`play-uploader-staging`, invited in the Play Console on its own app only, "Release apps to testing
+tracks"). Copies of all keys are in the owner's Bitwarden, nowhere else. A lost upload key can be reset
+through Play Console support; a lost service account key is replaced by a new key on the account.
 
 ## Updating
 
