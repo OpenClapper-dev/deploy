@@ -9,7 +9,7 @@ on:
 
 jobs:
   deploy:
-    uses: OpenClapper-dev/core/.github/workflows/deploy-server.yml@4df9396e1fa5491f68ae7beb1c3c8601d5dd9e39
+    uses: OpenClapper-dev/core/.github/workflows/deploy-server.yml@a206d683f0a883aae99285a11926c8a613bedbfc
     with:
       path: core
       environment: production
