@@ -34,7 +34,7 @@ This is the operations side and belongs to this instance only.
   changes with every *Staging · Recreate from production*.
 
 **Alerts** (folder OpenClapper, group `openclapper`, every 15 minutes, production only): API Worker errors in
-the last hour, API CPU p99 above 10 ms, 5xx share on openclapper.app above 5 % (from 20 requests). They go
+the last hour, API invocations Cloudflare stopped for exceeding CPU or memory, 5xx share on openclapper.app above 5 % (from 20 requests). There is no rule on CPU p99: at this traffic an hour's p99 is its slowest invocation, and the nightly cron alone takes about 15 ms; the Platform dashboard shows it against the 10 ms line. They go
 to the stack's default contact point.
 
 ## Limits that shape it

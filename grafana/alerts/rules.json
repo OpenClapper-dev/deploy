@@ -110,14 +110,14 @@
       ]
     },
     {
-      "uid": "oc-api-cpu",
-      "title": "Production API: CPU p99 above 10 ms",
+      "uid": "oc-api-exceeded",
+      "title": "Production API: invocations stopped for CPU or memory",
       "condition": "C",
       "for": "0s",
       "noDataState": "OK",
       "execErrState": "Error",
       "annotations": {
-        "summary": "openclapper-api's 99th percentile CPU time was above 10 ms in the last hour, the Workers free plan's limit per request.",
+        "summary": "Cloudflare stopped openclapper-api invocations for exceeding their CPU or memory limit in the last hour (the free plan allows 10 ms of CPU).",
         "description": "Checked every 15m over the last 60 minutes. Dashboard: OpenClapper · Platform or Traffic."
       },
       "labels": {
@@ -143,7 +143,7 @@
             "url": "/graphql",
             "parser": "jq-backend",
             "format": "table",
-            "root_selector": "if ((.errors // []) | length) > 0 then error([.errors[].message] | join(\"; \")) else ([{ value: (([.data.viewer.accounts[]?.workersInvocationsAdaptive[]? | .quantiles.cpuTimeP99] | max // 0) / 1000) }]) end",
+            "root_selector": "if ((.errors // []) | length) > 0 then error([.errors[].message] | join(\"; \")) else ([{ value: ([.data.viewer.accounts[]?.workersInvocationsAdaptive[]? | .sum.requests] | add // 0) }]) end",
             "columns": [
               {
                 "selector": "value",
@@ -155,7 +155,7 @@
               "method": "POST",
               "body_type": "graphql",
               "body_content_type": "application/json",
-              "body_graphql_query": "{ viewer { accounts(filter: { accountTag: \"3868cbc17be171c90972dd32e41e7783\" }) { workersInvocationsAdaptive(limit: 10, filter: { datetime_geq: \"${__from:date:iso}\", datetime_leq: \"${__to:date:iso}\", scriptName: \"openclapper-api\" }) { quantiles { cpuTimeP99 } } } } }",
+              "body_graphql_query": "{ viewer { accounts(filter: { accountTag: \"3868cbc17be171c90972dd32e41e7783\" }) { workersInvocationsAdaptive(limit: 100, filter: { datetime_geq: \"${__from:date:iso}\", datetime_leq: \"${__to:date:iso}\", scriptName: \"openclapper-api\", status: \"exceededResources\" }) { sum { requests } } } } }",
               "body_graphql_variables": ""
             },
             "intervalMs": 60000,
@@ -202,7 +202,7 @@
                 "evaluator": {
                   "type": "gt",
                   "params": [
-                    10
+                    0
                   ]
                 }
               }

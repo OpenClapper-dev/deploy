@@ -457,11 +457,13 @@ function alertRules() {
         query: account(`workersInvocationsAdaptive(limit: 100, filter: { ${ACCOUNT_RANGE}, scriptName: "${p.api}" }) { sum { errors } }`),
         root: guard(`[{ value: ([${accountSet("workersInvocationsAdaptive")} | .sum.errors] | add // 0) }]`),
       }),
+      // Not a CPU p99 rule: at this traffic an hour's p99 is its slowest invocation, and the nightly cron
+      // alone takes about 15 ms, so it would fire every night. What hurts is an invocation Cloudflare stops.
       rule({
-        uid: "oc-api-cpu", title: "Production API: CPU p99 above 10 ms", above: 10,
-        summary: `${p.api}'s 99th percentile CPU time was above 10 ms in the last hour, the Workers free plan's limit per request.`,
-        query: account(`workersInvocationsAdaptive(limit: 10, filter: { ${ACCOUNT_RANGE}, scriptName: "${p.api}" }) { quantiles { cpuTimeP99 } }`),
-        root: guard(`[{ value: (([${accountSet("workersInvocationsAdaptive")} | .quantiles.cpuTimeP99] | max // 0) / 1000) }]`),
+        uid: "oc-api-exceeded", title: "Production API: invocations stopped for CPU or memory", above: 0,
+        summary: `Cloudflare stopped ${p.api} invocations for exceeding their CPU or memory limit in the last hour (the free plan allows 10 ms of CPU).`,
+        query: account(`workersInvocationsAdaptive(limit: 100, filter: { ${ACCOUNT_RANGE}, scriptName: "${p.api}", status: "exceededResources" }) { sum { requests } }`),
+        root: guard(`[{ value: ([${accountSet("workersInvocationsAdaptive")} | .sum.requests] | add // 0) }]`),
       }),
       rule({
         uid: "oc-app-5xx", title: `${ZONES.app.hosts[0]}: 5xx share above 5 %`, above: 5,
