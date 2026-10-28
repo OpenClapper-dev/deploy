@@ -18,6 +18,7 @@ All manual, named by instance first:
 | **Staging · Deploy server** | the same for staging, on core's `main` or a `ref` |
 | **Staging · Build phone app** | "OpenClapper Staging", APK + App Bundle; `track: internal` uploads to Play |
 | **Staging · Recreate from production** | staging rebuilt as a copy of production (production only read), then deployed |
+| **Grafana · Sync** | the monitoring dashboards, alert rules and their Cloudflare data source to the Grafana Cloud stack ([grafana/](grafana/README.md)) |
 
 The development client is not built here: it needs no deployment (core's Build phone app, `variant: dev`).
 
@@ -113,6 +114,10 @@ clone recreates the database, and the deploy finds it by name. Its secrets are t
 clone: `SOURCE_R2_ACCESS_KEY_ID` / `SOURCE_R2_SECRET_ACCESS_KEY` (Object Read only on
 `openclapper-media`) and `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` (Object Read & Write on
 `openclapper-staging-media`). The Cloudflare token is a shared repository secret.
+
+The `monitoring` environment (Settings → Environments, `main` only) holds Grafana's settings, used by
+Grafana · Sync only: the variable `GRAFANA_URL` and the secrets `GRAFANA_TOKEN` (a service account of the
+stack) and `CF_GRAFANA_TOKEN` (a read-only Cloudflare analytics token). Setup in [grafana/](grafana/README.md#setting-it-up).
 
 Per environment, `production` and `staging` each have their own secrets for the phone app: the Android
 key (`ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD`;

@@ -1,0 +1,37 @@
+# Pushes the Grafana dashboards, the alert rules and the Cloudflare data source to the Grafana Cloud
+# stack (grafana/README.md). Manual, like every workflow here: run it after a change under grafana/.
+# Settings: the monitoring environment (README.md): the variable GRAFANA_URL and the secrets GRAFANA_TOKEN
+# (a service account of the stack with the Admin role) and CF_GRAFANA_TOKEN (the read-only Cloudflare token).
+name: Grafana · Sync
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: grafana-sync
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    environment: monitoring
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      # The committed JSON must be what build.mjs writes, so a hand edit never goes live by accident.
+      - name: Dashboards up to date
+        run: node grafana/build.mjs --check
+
+      - name: Sync
+        env:
+          GRAFANA_URL: ${{ vars.GRAFANA_URL }}
+          GRAFANA_TOKEN: ${{ secrets.GRAFANA_TOKEN }}
+          CF_GRAFANA_TOKEN: ${{ secrets.CF_GRAFANA_TOKEN }}
+        run: node grafana/sync.mjs
