@@ -1,0 +1,325 @@
+{
+  "title": "openclapper",
+  "folderUid": "openclapper",
+  "interval": 900,
+  "rules": [
+    {
+      "uid": "oc-api-errors",
+      "title": "Production API: Worker errors",
+      "condition": "C",
+      "for": "0s",
+      "noDataState": "OK",
+      "execErrState": "Error",
+      "annotations": {
+        "summary": "openclapper-api had invocations that ended in an error in the last hour.",
+        "description": "Checked every 15m over the last 60 minutes. Dashboard: OpenClapper · Platform or Traffic."
+      },
+      "labels": {
+        "instance": "production"
+      },
+      "data": [
+        {
+          "refId": "A",
+          "datasourceUid": "cloudflare-analytics",
+          "queryType": "",
+          "relativeTimeRange": {
+            "from": 3600,
+            "to": 0
+          },
+          "model": {
+            "refId": "A",
+            "datasource": {
+              "type": "yesoreyeram-infinity-datasource",
+              "uid": "cloudflare-analytics"
+            },
+            "type": "graphql",
+            "source": "url",
+            "url": "/graphql",
+            "parser": "jq-backend",
+            "format": "table",
+            "root_selector": "if ((.errors // []) | length) > 0 then error([.errors[].message] | join(\"; \")) else ([{ value: ([.data.viewer.accounts[]?.workersInvocationsAdaptive[]? | .sum.errors] | add // 0) }]) end",
+            "columns": [
+              {
+                "selector": "value",
+                "text": "value",
+                "type": "number"
+              }
+            ],
+            "url_options": {
+              "method": "POST",
+              "body_type": "graphql",
+              "body_content_type": "application/json",
+              "body_graphql_query": "{ viewer { accounts(filter: { accountTag: \"3868cbc17be171c90972dd32e41e7783\" }) { workersInvocationsAdaptive(limit: 100, filter: { datetime_geq: \"${__from:date:iso}\", datetime_leq: \"${__to:date:iso}\", scriptName: \"openclapper-api\" }) { sum { errors } } } } }",
+              "body_graphql_variables": ""
+            },
+            "intervalMs": 60000,
+            "maxDataPoints": 43200
+          }
+        },
+        {
+          "refId": "B",
+          "datasourceUid": "__expr__",
+          "queryType": "",
+          "relativeTimeRange": {
+            "from": 0,
+            "to": 0
+          },
+          "model": {
+            "refId": "B",
+            "type": "reduce",
+            "expression": "A",
+            "reducer": "last",
+            "settings": {
+              "mode": "replaceNN",
+              "replaceWithValue": 0
+            },
+            "datasource": {
+              "type": "__expr__",
+              "uid": "__expr__"
+            }
+          }
+        },
+        {
+          "refId": "C",
+          "datasourceUid": "__expr__",
+          "queryType": "",
+          "relativeTimeRange": {
+            "from": 0,
+            "to": 0
+          },
+          "model": {
+            "refId": "C",
+            "type": "threshold",
+            "expression": "B",
+            "conditions": [
+              {
+                "evaluator": {
+                  "type": "gt",
+                  "params": [
+                    0
+                  ]
+                }
+              }
+            ],
+            "datasource": {
+              "type": "__expr__",
+              "uid": "__expr__"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "uid": "oc-api-cpu",
+      "title": "Production API: CPU p99 above 10 ms",
+      "condition": "C",
+      "for": "0s",
+      "noDataState": "OK",
+      "execErrState": "Error",
+      "annotations": {
+        "summary": "openclapper-api's 99th percentile CPU time was above 10 ms in the last hour, the Workers free plan's limit per request.",
+        "description": "Checked every 15m over the last 60 minutes. Dashboard: OpenClapper · Platform or Traffic."
+      },
+      "labels": {
+        "instance": "production"
+      },
+      "data": [
+        {
+          "refId": "A",
+          "datasourceUid": "cloudflare-analytics",
+          "queryType": "",
+          "relativeTimeRange": {
+            "from": 3600,
+            "to": 0
+          },
+          "model": {
+            "refId": "A",
+            "datasource": {
+              "type": "yesoreyeram-infinity-datasource",
+              "uid": "cloudflare-analytics"
+            },
+            "type": "graphql",
+            "source": "url",
+            "url": "/graphql",
+            "parser": "jq-backend",
+            "format": "table",
+            "root_selector": "if ((.errors // []) | length) > 0 then error([.errors[].message] | join(\"; \")) else ([{ value: (([.data.viewer.accounts[]?.workersInvocationsAdaptive[]? | .quantiles.cpuTimeP99] | max // 0) / 1000) }]) end",
+            "columns": [
+              {
+                "selector": "value",
+                "text": "value",
+                "type": "number"
+              }
+            ],
+            "url_options": {
+              "method": "POST",
+              "body_type": "graphql",
+              "body_content_type": "application/json",
+              "body_graphql_query": "{ viewer { accounts(filter: { accountTag: \"3868cbc17be171c90972dd32e41e7783\" }) { workersInvocationsAdaptive(limit: 10, filter: { datetime_geq: \"${__from:date:iso}\", datetime_leq: \"${__to:date:iso}\", scriptName: \"openclapper-api\" }) { quantiles { cpuTimeP99 } } } } }",
+              "body_graphql_variables": ""
+            },
+            "intervalMs": 60000,
+            "maxDataPoints": 43200
+          }
+        },
+        {
+          "refId": "B",
+          "datasourceUid": "__expr__",
+          "queryType": "",
+          "relativeTimeRange": {
+            "from": 0,
+            "to": 0
+          },
+          "model": {
+            "refId": "B",
+            "type": "reduce",
+            "expression": "A",
+            "reducer": "last",
+            "settings": {
+              "mode": "replaceNN",
+              "replaceWithValue": 0
+            },
+            "datasource": {
+              "type": "__expr__",
+              "uid": "__expr__"
+            }
+          }
+        },
+        {
+          "refId": "C",
+          "datasourceUid": "__expr__",
+          "queryType": "",
+          "relativeTimeRange": {
+            "from": 0,
+            "to": 0
+          },
+          "model": {
+            "refId": "C",
+            "type": "threshold",
+            "expression": "B",
+            "conditions": [
+              {
+                "evaluator": {
+                  "type": "gt",
+                  "params": [
+                    10
+                  ]
+                }
+              }
+            ],
+            "datasource": {
+              "type": "__expr__",
+              "uid": "__expr__"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "uid": "oc-app-5xx",
+      "title": "openclapper.app: 5xx share above 5 %",
+      "condition": "C",
+      "for": "0s",
+      "noDataState": "OK",
+      "execErrState": "Error",
+      "annotations": {
+        "summary": "More than 5 % of the requests to openclapper.app answered 5xx in the last hour (at least 20 requests).",
+        "description": "Checked every 15m over the last 60 minutes. Dashboard: OpenClapper · Platform or Traffic."
+      },
+      "labels": {
+        "instance": "production"
+      },
+      "data": [
+        {
+          "refId": "A",
+          "datasourceUid": "cloudflare-analytics",
+          "queryType": "",
+          "relativeTimeRange": {
+            "from": 3600,
+            "to": 0
+          },
+          "model": {
+            "refId": "A",
+            "datasource": {
+              "type": "yesoreyeram-infinity-datasource",
+              "uid": "cloudflare-analytics"
+            },
+            "type": "graphql",
+            "source": "url",
+            "url": "/graphql",
+            "parser": "jq-backend",
+            "format": "table",
+            "root_selector": "if ((.errors // []) | length) > 0 then error([.errors[].message] | join(\"; \")) else ([.data.viewer.zones[]?.httpRequestsAdaptiveGroups[]?] as $g | ($g | map(.count) | add // 0) as $all | [{ value: (if $all < 20 then 0 else 100 * ($g | map(select(.dimensions.edgeResponseStatus >= 500) | .count) | add // 0) / $all end) }]) end",
+            "columns": [
+              {
+                "selector": "value",
+                "text": "value",
+                "type": "number"
+              }
+            ],
+            "url_options": {
+              "method": "POST",
+              "body_type": "graphql",
+              "body_content_type": "application/json",
+              "body_graphql_query": "{ viewer { zones(filter: { zoneTag: \"229c2121dbd38d2df02496f515c8c7b4\" }) { httpRequestsAdaptiveGroups(limit: 100, filter: { datetime_geq: \"${__from:date:iso}\", datetime_leq: \"${__to:date:iso}\", requestSource: \"eyeball\", clientRequestHTTPHost: \"openclapper.app\" }) { count dimensions { edgeResponseStatus } } } } }",
+              "body_graphql_variables": ""
+            },
+            "intervalMs": 60000,
+            "maxDataPoints": 43200
+          }
+        },
+        {
+          "refId": "B",
+          "datasourceUid": "__expr__",
+          "queryType": "",
+          "relativeTimeRange": {
+            "from": 0,
+            "to": 0
+          },
+          "model": {
+            "refId": "B",
+            "type": "reduce",
+            "expression": "A",
+            "reducer": "last",
+            "settings": {
+              "mode": "replaceNN",
+              "replaceWithValue": 0
+            },
+            "datasource": {
+              "type": "__expr__",
+              "uid": "__expr__"
+            }
+          }
+        },
+        {
+          "refId": "C",
+          "datasourceUid": "__expr__",
+          "queryType": "",
+          "relativeTimeRange": {
+            "from": 0,
+            "to": 0
+          },
+          "model": {
+            "refId": "C",
+            "type": "threshold",
+            "expression": "B",
+            "conditions": [
+              {
+                "evaluator": {
+                  "type": "gt",
+                  "params": [
+                    5
+                  ]
+                }
+              }
+            ],
+            "datasource": {
+              "type": "__expr__",
+              "uid": "__expr__"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

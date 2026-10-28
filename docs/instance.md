@@ -12,6 +12,7 @@ What the public docs no longer name (they describe any instance).
 | Zero Trust team | `weathered-salad-6072.cloudflareaccess.com` |
 | Access app for the admin plane | "OpenClapper Admin" (`9df75d75-ee5b-463a-8387-88925b5abcbb`, renamed from "Fielder-Admin" 2026-10-23, the deleted Fielder Worker's destination removed), AUD `727fade57871978d220f144dd28ccd5d99cb5683aa4f736e8856a0a1bb6a2ed7`; the reusable policy "Owner auth" (`89f333bc-2657-4af2-8670-d32e8b943c45`): the owner's email, one-time PIN |
 | Android keys | One per environment, made 2026-10-23: production `CN=OpenClapper`, alias `openclapper`, SHA-256 `5E:B3:BA:F7:…:30:89`; staging `CN=OpenClapper Staging`, alias `openclapper-staging`, SHA-256 `32:C0:B5:35:…:84:D5`. Upload keys on Google Play (Play signs with Google-generated keys). In the environments' `ANDROID_KEY*` secrets and the owner's Bitwarden. The old `CN=Fielder` key is retired |
+| Monitoring | Grafana Cloud free stack with two dashboards and three alert rules on Cloudflare's analytics ([grafana/](../grafana/README.md)); zones openclapper.app `229c2121…c7b4` and openclapper.org `9adc7037…63841de`; Web Analytics on openclapper.app (site tag `7d6f533b…a252`) |
 | Google Play | Personal developer account. Apps `org.openclapper` and `org.openclapper.staging` on the internal testing track; service accounts `play-uploader-production` / `play-uploader-staging` in the Google Cloud project `openclapper`, each invited on its own app only; their keys in `PLAY_SERVICE_ACCOUNT_JSON` per environment |
 
 ## Staging
@@ -31,6 +32,7 @@ After a clone, staging holds production's accounts and password hashes (sessions
 
 ## History
 
+- 2026-10-28: Grafana monitoring (#15): Traffic and Platform dashboards and three production alerts, generated in `grafana/` and pushed by Grafana · Sync from the `monitoring` environment.
 - 2026-10-23: Google Play. Both apps on the internal track (first bundles by hand: staging 407, production 11000), uploads from Build APK verified (staging 410). New keys per environment; no key is kept on the owner's machine any more.
 - 2026-10-23: v0.10.0. Production moved to the `production` GitHub environment; `deploy.env` and the last repository variable (`APP_URL`) are gone (#7). Access app renamed "OpenClapper Admin". The owner plans new signing keys for production and staging (the old one is `CN=Fielder`); installs from the old key are replaced once.
 - 2026-10-22: the repository went public with GitHub environments; production's settings left the repository variables (all but `APP_URL`), so the `staging` environment cannot inherit them, and production reads them from `deploy.env` until #7. Staging deployed twice (resources, then its Access application) and serves staging.openclapper.app; no accounts until the first clone.
