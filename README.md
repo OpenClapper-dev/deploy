@@ -1,9 +1,11 @@
 # deploy
 
-The deployment of the reference OpenClapper instances, production and staging. The product is the public repository
-[OpenClapper-dev/core](https://github.com/OpenClapper-dev/core), here as the `core/` submodule; this
-repository only holds what is specific to this instance: its settings, its deploy pipeline, its notes,
-and later the hosted-only extensions (billing) plugged in through the auth seam.
+The deployment of the OpenClapper instances the maintainer runs, production and staging. The code is the
+public repository [OpenClapper-dev/core](https://github.com/OpenClapper-dev/core), here as the `core/`
+submodule; this repository only holds what is specific to these instances: their settings, the deploy
+pipeline, the notes, the monitoring, and later the hosted-only extensions (billing) plugged in through
+the auth seam. The project itself, experimental today with the alpha defined together with the
+community, is presented on [openclapper.org](https://openclapper.org).
 
 ## Workflows
 
