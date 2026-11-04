@@ -160,27 +160,26 @@ function zoneStatus(z, { known }) {
   });
 }
 
-function trafficDashboard() {
-  nextId = 1;
-  const app = ZONES.app, org = ZONES.org;
-  const appDaily = panel({ title: `${app.name}: requests, page views and visitors per day`, description: "Every host of the zone together, from Cloudflare's daily zone totals (kept a year). Today is partial. Visitors are unique per day, so they do not add up across days.", w: 16, t: zoneDaily(app), points: true, transformations: [keepFields(["Time", "Requests", "Page views", "Unique visitors"])] });
-  const appTotals = stat({ title: "In the range", description: "Sums of the daily totals on the left. Bandwidth is what Cloudflare sent to visitors.", w: 8, reuse: appDaily, transformations: [keepFields(["Requests", "Page views", "Threats", "Bandwidth"])], overrides: [{ matcher: { id: "byName", options: "Bandwidth" }, properties: [{ id: "unit", value: "bytes" }] }] });
-  const hosts = panel({ bars: true, stack: true, title: "Requests per host", description: "Visitor requests (no Worker subrequests) per known host. Scanners on odd ports are left out here and listed in the details row. Per host, Cloudflare keeps 31 days.", t: zoneHosts(app, { known: true }), transformations: [keepFields(["Time", "host", "Requests"])], split: "host", series: "${__field.labels.host}" });
+/** One zone's two sections: the overview row and the collapsed details row. Both zones get the same, so they cannot drift (deploy#19). */
+function zoneSections(z, { cacheNote }) {
+  const daily = panel({ title: `${z.name}: requests, page views and visitors per day`, description: "Every host of the zone together, from Cloudflare's daily zone totals (kept a year). Today is partial. Visitors are unique per day, so they do not add up across days.", w: 16, t: zoneDaily(z), points: true, transformations: [keepFields(["Time", "Requests", "Page views", "Unique visitors"])] });
+  const totals = stat({ title: "In the range", description: "Sums of the daily totals on the left. Bandwidth is what Cloudflare sent to visitors.", w: 8, reuse: daily, transformations: [keepFields(["Requests", "Page views", "Threats", "Bandwidth"])], overrides: [{ matcher: { id: "byName", options: "Bandwidth" }, properties: [{ id: "unit", value: "bytes" }] }] });
+  const hosts = panel({ bars: true, stack: true, title: "Requests per host", description: "Visitor requests (no Worker subrequests) per known host. Scanners on odd ports are left out here and listed in the details row. Per host, Cloudflare keeps 31 days.", t: zoneHosts(z, { known: true }), transformations: [keepFields(["Time", "host", "Requests"])], split: "host", series: "${__field.labels.host}" });
   const hostBytes = panel({ bars: true, stack: true, title: "Bandwidth per host", description: "Bytes sent to visitors, per host.", reuse: hosts, unit: "bytes", transformations: [keepFields(["Time", "host", "Bandwidth"])], split: "host", series: "${__field.labels.host}" });
   const hostVisits = panel({ bars: true, stack: true, title: "Visits per host", description: "Cloudflare's visits: a request from another site or none, roughly a session start.", reuse: hosts, transformations: [keepFields(["Time", "host", "Visits"])], split: "host", series: "${__field.labels.host}" });
-  const status = panel({ title: "Responses by status class", description: "All known hosts together.", w: 12, t: zoneStatus(app, { known: true }), bars: true, stack: true, split: "class", series: "${__field.labels.class}" });
+  const status = panel({ title: "Responses by status class", description: "All known hosts together.", w: 12, t: zoneStatus(z, { known: true }), bars: true, stack: true, split: "class", series: "${__field.labels.class}" });
   const errorsByHost = table({
     title: "4xx and 5xx by host and status", description: "In the range; scanners probing paths show up as 404s.", w: 12,
     t: target({
-      query: zone(app.id, `httpRequestsAdaptiveGroups(limit: 200, filter: { datetime_geq: "${FROM}", datetime_leq: "${TO}", requestSource: "eyeball", edgeResponseStatus_geq: 400 }, orderBy: [count_DESC]) { count dimensions { clientRequestHTTPHost edgeResponseStatus } }`),
+      query: zone(z.id, `httpRequestsAdaptiveGroups(limit: 200, filter: { datetime_geq: "${FROM}", datetime_leq: "${TO}", requestSource: "eyeball", edgeResponseStatus_geq: 400 }, orderBy: [count_DESC]) { count dimensions { clientRequestHTTPHost edgeResponseStatus } }`),
       root: rows(zoneSet("httpRequestsAdaptiveGroups"), { host: ".dimensions.clientRequestHTTPHost", status: ".dimensions.edgeResponseStatus", requests: ".count" }),
       columns: [col("host", "string", "Host"), col("status", "number", "Status"), col("requests", "number", "Requests")],
     }),
   });
   const paths = table({
-    title: `Top paths on ${app.hosts[0]}`, w: 8, h: 10,
+    title: `Top paths on ${z.hosts[0]}`, w: 8, h: 10,
     t: target({
-      query: zone(app.id, `httpRequestsAdaptiveGroups(limit: 25, filter: { datetime_geq: "${FROM}", datetime_leq: "${TO}", requestSource: "eyeball", clientRequestHTTPHost: "${app.hosts[0]}" }, orderBy: [count_DESC]) { count dimensions { clientRequestPath } }`),
+      query: zone(z.id, `httpRequestsAdaptiveGroups(limit: 25, filter: { datetime_geq: "${FROM}", datetime_leq: "${TO}", requestSource: "eyeball", clientRequestHTTPHost: "${z.hosts[0]}" }, orderBy: [count_DESC]) { count dimensions { clientRequestPath } }`),
       root: rows(zoneSet("httpRequestsAdaptiveGroups"), { path: ".dimensions.clientRequestPath", requests: ".count" }),
       columns: [col("path", "string", "Path"), col("requests", "number", "Requests")],
     }),
@@ -188,7 +187,7 @@ function trafficDashboard() {
   const countries = table({
     title: "Countries", description: "Every host of the zone, from the daily totals.", w: 8, h: 10,
     t: target({
-      query: zone(app.id, `httpRequests1dGroups(limit: 400, filter: { date_geq: "${FROM_D}", date_leq: "${TO_D}" }) { sum { countryMap { clientCountryName requests threats } } }`),
+      query: zone(z.id, `httpRequests1dGroups(limit: 400, filter: { date_geq: "${FROM_D}", date_leq: "${TO_D}" }) { sum { countryMap { clientCountryName requests threats } } }`),
       root: rows(`${zoneSet("httpRequests1dGroups")}.sum.countryMap[]`, { country: ".clientCountryName", requests: ".requests", threats: ".threats" }, { sum: { keys: ["country"], values: ["requests", "threats"] }, sortDesc: "requests", limit: 30 }),
       columns: [col("country", "string", "Country"), col("requests", "number", "Requests"), col("threats", "number", "Threats")],
     }),
@@ -196,25 +195,31 @@ function trafficDashboard() {
   const others = table({
     title: "Other hosts (scanners, odd ports)", description: "Requests to host names that are not ours as listed in instance.mjs, mostly bots probing ports.", w: 8, h: 10,
     t: target({
-      query: zone(app.id, `httpRequestsAdaptiveGroups(limit: 25, filter: { datetime_geq: "${FROM}", datetime_leq: "${TO}", requestSource: "eyeball", clientRequestHTTPHost_notin: ${list(app.hosts)} }, orderBy: [count_DESC]) { count dimensions { clientRequestHTTPHost } }`),
+      query: zone(z.id, `httpRequestsAdaptiveGroups(limit: 25, filter: { datetime_geq: "${FROM}", datetime_leq: "${TO}", requestSource: "eyeball", clientRequestHTTPHost_notin: ${list(z.hosts)} }, orderBy: [count_DESC]) { count dimensions { clientRequestHTTPHost } }`),
       root: rows(zoneSet("httpRequestsAdaptiveGroups"), { host: ".dimensions.clientRequestHTTPHost", requests: ".count" }),
       columns: [col("host", "string", "Host"), col("requests", "number", "Requests")],
     }),
   });
   const cache = panel({
-    type: "piechart", title: "Cache status", description: "Known hosts. The Studio's assets come from the edge; the API is never cached.", w: 8, h: 10,
+    type: "piechart", title: "Cache status", description: cacheNote, w: 8, h: 10,
     t: target({
-      query: zone(app.id, `httpRequestsAdaptiveGroups(limit: 50, filter: { datetime_geq: "${FROM}", datetime_leq: "${TO}", requestSource: "eyeball", clientRequestHTTPHost_in: ${list(app.hosts)} }) { count dimensions { cacheStatus } }`),
+      query: zone(z.id, `httpRequestsAdaptiveGroups(limit: 50, filter: { datetime_geq: "${FROM}", datetime_leq: "${TO}", requestSource: "eyeball", clientRequestHTTPHost_in: ${list(z.hosts)} }) { count dimensions { cacheStatus } }`),
       root: rows(zoneSet("httpRequestsAdaptiveGroups"), { cache: ".dimensions.cacheStatus", requests: ".count" }),
       columns: [col("cache", "string", "Cache"), col("requests", "number", "Requests")],
     }),
     options: { reduceOptions: { values: true, calcs: ["lastNotNull"], fields: "" }, pieType: "donut", legend: { displayMode: "table", placement: "right", values: ["value", "percent"], showLegend: true }, displayLabels: [] },
   });
-  const orgDaily = panel({ title: `${org.name}: requests, page views and visitors per day`, description: "The public site's zone, every host together (daily totals, kept a year). Empty until the site is deployed.", w: 12, t: zoneDaily(org), points: true, transformations: [keepFields(["Time", "Requests", "Page views", "Unique visitors"])] });
-  const orgHosts = panel({ bars: true, stack: true, title: `${org.name}: requests per host`, description: "Every host name the zone answered, odd ports included.", w: 12, t: zoneHosts(org, { known: false }), transformations: [keepFields(["Time", "host", "Requests"])], split: "host", series: "${__field.labels.host}" });
-  const orgStatus = panel({ title: `${org.name}: responses by status class`, w: 12, t: zoneStatus(org, { known: false }), bars: true, stack: true, split: "class", series: "${__field.labels.class}" });
-  const orgBytes = panel({ bars: true, stack: true, title: `${org.name}: bandwidth per host`, w: 12, reuse: orgHosts, unit: "bytes", transformations: [keepFields(["Time", "host", "Bandwidth"])], split: "host", series: "${__field.labels.host}" });
+  return [
+    { title: z.name, panels: [daily, totals, hosts, hostBytes, hostVisits, status, errorsByHost] },
+    { title: `${z.name}: details`, collapsed: true, panels: [paths, countries, others, cache] },
+  ];
+}
 
+function trafficDashboard() {
+  nextId = 1;
+  const app = ZONES.app, org = ZONES.org;
+  const appSections = zoneSections(app, { cacheNote: "Known hosts. The Studio's assets come from the edge; the API is never cached." });
+  const orgSections = zoneSections(org, { cacheNote: "Known hosts. The page's assets come from the edge; the forms' API is never cached." });
   const rumHosts = [...ZONES.app.hosts.slice(0, 1), ...ZONES.org.hosts];
   const RUM_FILTER = `datetime_geq: "${FROM}", datetime_leq: "${TO}", requestHost_in: ${list(rumHosts)}`;
   const rumViews = panel({
@@ -251,9 +256,8 @@ function trafficDashboard() {
     uid: "oc-traffic", title: "OpenClapper · Traffic",
     description: "Visitor traffic on openclapper.app (production, admin, staging) and openclapper.org, and Cloudflare Web Analytics. Live from Cloudflare's GraphQL API; generated by grafana/build.mjs in the deploy repository.",
     sections: [
-      { title: app.name, panels: [appDaily, appTotals, hosts, hostBytes, hostVisits, status, errorsByHost] },
-      { title: `${app.name}: details`, collapsed: true, panels: [paths, countries, others, cache] },
-      { title: org.name, panels: [orgDaily, orgHosts, orgStatus, orgBytes] },
+      ...appSections,
+      ...orgSections,
       { title: "Web Analytics (openclapper.app, openclapper.org)", panels: [rumViews, rumLoad, rumPages, rumRefs, rumWho] },
     ],
   });

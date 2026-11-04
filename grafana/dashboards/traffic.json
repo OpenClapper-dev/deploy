@@ -34,7 +34,7 @@
   "links": [],
   "panels": [
     {
-      "id": 21,
+      "id": 28,
       "type": "row",
       "title": "openclapper.app",
       "collapsed": false,
@@ -705,7 +705,7 @@
       }
     },
     {
-      "id": 22,
+      "id": 29,
       "type": "row",
       "title": "openclapper.app: details",
       "collapsed": true,
@@ -1024,7 +1024,7 @@
       ]
     },
     {
-      "id": 23,
+      "id": 30,
       "type": "row",
       "title": "openclapper.org",
       "collapsed": false,
@@ -1040,9 +1040,9 @@
       "id": 12,
       "type": "timeseries",
       "title": "openclapper.org: requests, page views and visitors per day",
-      "description": "The public site's zone, every host together (daily totals, kept a year). Empty until the site is deployed.",
+      "description": "Every host of the zone together, from Cloudflare's daily zone totals (kept a year). Today is partial. Visitors are unique per day, so they do not add up across days.",
       "gridPos": {
-        "w": 12,
+        "w": 16,
         "h": 8,
         "x": 0,
         "y": 55
@@ -1157,14 +1157,89 @@
     },
     {
       "id": 13,
+      "type": "stat",
+      "title": "In the range",
+      "description": "Sums of the daily totals on the left. Bandwidth is what Cloudflare sent to visitors.",
+      "gridPos": {
+        "w": 8,
+        "h": 8,
+        "x": 16,
+        "y": 55
+      },
+      "datasource": {
+        "type": "datasource",
+        "uid": "-- Dashboard --"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "datasource",
+            "uid": "-- Dashboard --"
+          },
+          "panelId": 12
+        }
+      ],
+      "transformations": [
+        {
+          "id": "filterFieldsByName",
+          "options": {
+            "include": {
+              "names": [
+                "Requests",
+                "Page views",
+                "Threats",
+                "Bandwidth"
+              ]
+            }
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {}
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Bandwidth"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "bytes"
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "sum"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "none",
+        "graphMode": "none",
+        "textMode": "value_and_name",
+        "justifyMode": "auto",
+        "orientation": "horizontal"
+      }
+    },
+    {
+      "id": 14,
       "type": "timeseries",
-      "title": "openclapper.org: requests per host",
-      "description": "Every host name the zone answered, odd ports included.",
+      "title": "Requests per host",
+      "description": "Visitor requests (no Worker subrequests) per known host. Scanners on odd ports are left out here and listed in the details row. Per host, Cloudflare keeps 31 days.",
       "gridPos": {
         "w": 12,
         "h": 8,
-        "x": 12,
-        "y": 55
+        "x": 0,
+        "y": 63
       },
       "datasource": {
         "type": "yesoreyeram-infinity-datasource",
@@ -1214,7 +1289,7 @@
             "method": "POST",
             "body_type": "graphql",
             "body_content_type": "application/json",
-            "body_graphql_query": "{ viewer { zones(filter: { zoneTag: \"9adc703717aec978ff419ff8563841de\" }) { httpRequestsAdaptiveGroups(limit: 10000, filter: { datetime_geq: \"${__from:date:iso}\", datetime_leq: \"${__to:date:iso}\", requestSource: \"eyeball\" }) { count sum { edgeResponseBytes visits } dimensions { t: $__customInterval(2d,datetimeFifteenMinutes,10d,datetimeHour,date) clientRequestHTTPHost } } } } }",
+            "body_graphql_query": "{ viewer { zones(filter: { zoneTag: \"9adc703717aec978ff419ff8563841de\" }) { httpRequestsAdaptiveGroups(limit: 10000, filter: { datetime_geq: \"${__from:date:iso}\", datetime_leq: \"${__to:date:iso}\", requestSource: \"eyeball\", clientRequestHTTPHost_in: [\"openclapper.org\", \"www.openclapper.org\"] }) { count sum { edgeResponseBytes visits } dimensions { t: $__customInterval(2d,datetimeFifteenMinutes,10d,datetimeHour,date) clientRequestHTTPHost } } } } }",
             "body_graphql_variables": ""
           }
         }
@@ -1277,107 +1352,10 @@
       }
     },
     {
-      "id": 14,
-      "type": "timeseries",
-      "title": "openclapper.org: responses by status class",
-      "gridPos": {
-        "w": 12,
-        "h": 8,
-        "x": 0,
-        "y": 63
-      },
-      "datasource": {
-        "type": "yesoreyeram-infinity-datasource",
-        "uid": "cloudflare-analytics"
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "datasource": {
-            "type": "yesoreyeram-infinity-datasource",
-            "uid": "cloudflare-analytics"
-          },
-          "type": "graphql",
-          "source": "url",
-          "url": "/graphql",
-          "parser": "jq-backend",
-          "format": "table",
-          "root_selector": "if ((.errors // []) | length) > 0 then error([.errors[].message] | join(\"; \")) else ([.data.viewer.zones[]?.httpRequestsAdaptiveGroups[]? | { time: ((if (.dimensions.t | length) == 10 then .dimensions.t + \"T00:00:00Z\" else .dimensions.t end)), class: (((.dimensions.edgeResponseStatus / 100 | floor | tostring) + \"xx\")), requests: (.count) }] | group_by([.time, .class]) | map({ time: (.[0].time), class: (.[0].class), requests: (map(.requests) | add) }) | sort_by(.time)) end",
-          "columns": [
-            {
-              "selector": "time",
-              "text": "Time",
-              "type": "timestamp"
-            },
-            {
-              "selector": "class",
-              "text": "class",
-              "type": "string"
-            },
-            {
-              "selector": "requests",
-              "text": "Requests",
-              "type": "number"
-            }
-          ],
-          "url_options": {
-            "method": "POST",
-            "body_type": "graphql",
-            "body_content_type": "application/json",
-            "body_graphql_query": "{ viewer { zones(filter: { zoneTag: \"9adc703717aec978ff419ff8563841de\" }) { httpRequestsAdaptiveGroups(limit: 10000, filter: { datetime_geq: \"${__from:date:iso}\", datetime_leq: \"${__to:date:iso}\", requestSource: \"eyeball\" }) { count dimensions { t: $__customInterval(2d,datetimeFifteenMinutes,10d,datetimeHour,date) edgeResponseStatus } } } } }",
-            "body_graphql_variables": ""
-          }
-        }
-      ],
-      "transformations": [
-        {
-          "id": "partitionByValues",
-          "options": {
-            "fields": [
-              "class"
-            ],
-            "keepFields": false,
-            "naming": {
-              "asLabels": true
-            }
-          }
-        }
-      ],
-      "fieldConfig": {
-        "defaults": {
-          "unit": "short",
-          "displayName": "${__field.labels.class}",
-          "custom": {
-            "drawStyle": "bars",
-            "lineWidth": 2,
-            "fillOpacity": 80,
-            "showPoints": "never",
-            "pointSize": 5,
-            "spanNulls": false,
-            "stacking": {
-              "mode": "normal",
-              "group": "A"
-            }
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "legend": {
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        }
-      }
-    },
-    {
       "id": 15,
       "type": "timeseries",
-      "title": "openclapper.org: bandwidth per host",
+      "title": "Bandwidth per host",
+      "description": "Bytes sent to visitors, per host.",
       "gridPos": {
         "w": 12,
         "h": 8,
@@ -1395,7 +1373,7 @@
             "type": "datasource",
             "uid": "-- Dashboard --"
           },
-          "panelId": 13
+          "panelId": 14
         }
       ],
       "transformations": [
@@ -1456,7 +1434,587 @@
       }
     },
     {
-      "id": 24,
+      "id": 16,
+      "type": "timeseries",
+      "title": "Visits per host",
+      "description": "Cloudflare's visits: a request from another site or none, roughly a session start.",
+      "gridPos": {
+        "w": 12,
+        "h": 8,
+        "x": 0,
+        "y": 71
+      },
+      "datasource": {
+        "type": "datasource",
+        "uid": "-- Dashboard --"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "datasource",
+            "uid": "-- Dashboard --"
+          },
+          "panelId": 14
+        }
+      ],
+      "transformations": [
+        {
+          "id": "filterFieldsByName",
+          "options": {
+            "include": {
+              "names": [
+                "Time",
+                "host",
+                "Visits"
+              ]
+            }
+          }
+        },
+        {
+          "id": "partitionByValues",
+          "options": {
+            "fields": [
+              "host"
+            ],
+            "keepFields": false,
+            "naming": {
+              "asLabels": true
+            }
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "displayName": "${__field.labels.host}",
+          "custom": {
+            "drawStyle": "bars",
+            "lineWidth": 2,
+            "fillOpacity": 80,
+            "showPoints": "never",
+            "pointSize": 5,
+            "spanNulls": false,
+            "stacking": {
+              "mode": "normal",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 17,
+      "type": "timeseries",
+      "title": "Responses by status class",
+      "description": "All known hosts together.",
+      "gridPos": {
+        "w": 12,
+        "h": 8,
+        "x": 12,
+        "y": 71
+      },
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "cloudflare-analytics"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "cloudflare-analytics"
+          },
+          "type": "graphql",
+          "source": "url",
+          "url": "/graphql",
+          "parser": "jq-backend",
+          "format": "table",
+          "root_selector": "if ((.errors // []) | length) > 0 then error([.errors[].message] | join(\"; \")) else ([.data.viewer.zones[]?.httpRequestsAdaptiveGroups[]? | { time: ((if (.dimensions.t | length) == 10 then .dimensions.t + \"T00:00:00Z\" else .dimensions.t end)), class: (((.dimensions.edgeResponseStatus / 100 | floor | tostring) + \"xx\")), requests: (.count) }] | group_by([.time, .class]) | map({ time: (.[0].time), class: (.[0].class), requests: (map(.requests) | add) }) | sort_by(.time)) end",
+          "columns": [
+            {
+              "selector": "time",
+              "text": "Time",
+              "type": "timestamp"
+            },
+            {
+              "selector": "class",
+              "text": "class",
+              "type": "string"
+            },
+            {
+              "selector": "requests",
+              "text": "Requests",
+              "type": "number"
+            }
+          ],
+          "url_options": {
+            "method": "POST",
+            "body_type": "graphql",
+            "body_content_type": "application/json",
+            "body_graphql_query": "{ viewer { zones(filter: { zoneTag: \"9adc703717aec978ff419ff8563841de\" }) { httpRequestsAdaptiveGroups(limit: 10000, filter: { datetime_geq: \"${__from:date:iso}\", datetime_leq: \"${__to:date:iso}\", requestSource: \"eyeball\", clientRequestHTTPHost_in: [\"openclapper.org\", \"www.openclapper.org\"] }) { count dimensions { t: $__customInterval(2d,datetimeFifteenMinutes,10d,datetimeHour,date) edgeResponseStatus } } } } }",
+            "body_graphql_variables": ""
+          }
+        }
+      ],
+      "transformations": [
+        {
+          "id": "partitionByValues",
+          "options": {
+            "fields": [
+              "class"
+            ],
+            "keepFields": false,
+            "naming": {
+              "asLabels": true
+            }
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "displayName": "${__field.labels.class}",
+          "custom": {
+            "drawStyle": "bars",
+            "lineWidth": 2,
+            "fillOpacity": 80,
+            "showPoints": "never",
+            "pointSize": 5,
+            "spanNulls": false,
+            "stacking": {
+              "mode": "normal",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    },
+    {
+      "id": 18,
+      "type": "table",
+      "title": "4xx and 5xx by host and status",
+      "description": "In the range; scanners probing paths show up as 404s.",
+      "gridPos": {
+        "w": 12,
+        "h": 8,
+        "x": 0,
+        "y": 79
+      },
+      "datasource": {
+        "type": "yesoreyeram-infinity-datasource",
+        "uid": "cloudflare-analytics"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "cloudflare-analytics"
+          },
+          "type": "graphql",
+          "source": "url",
+          "url": "/graphql",
+          "parser": "jq-backend",
+          "format": "table",
+          "root_selector": "if ((.errors // []) | length) > 0 then error([.errors[].message] | join(\"; \")) else ([.data.viewer.zones[]?.httpRequestsAdaptiveGroups[]? | { host: (.dimensions.clientRequestHTTPHost), status: (.dimensions.edgeResponseStatus), requests: (.count) }]) end",
+          "columns": [
+            {
+              "selector": "host",
+              "text": "Host",
+              "type": "string"
+            },
+            {
+              "selector": "status",
+              "text": "Status",
+              "type": "number"
+            },
+            {
+              "selector": "requests",
+              "text": "Requests",
+              "type": "number"
+            }
+          ],
+          "url_options": {
+            "method": "POST",
+            "body_type": "graphql",
+            "body_content_type": "application/json",
+            "body_graphql_query": "{ viewer { zones(filter: { zoneTag: \"9adc703717aec978ff419ff8563841de\" }) { httpRequestsAdaptiveGroups(limit: 200, filter: { datetime_geq: \"${__from:date:iso}\", datetime_leq: \"${__to:date:iso}\", requestSource: \"eyeball\", edgeResponseStatus_geq: 400 }, orderBy: [count_DESC]) { count dimensions { clientRequestHTTPHost edgeResponseStatus } } } } }",
+            "body_graphql_variables": ""
+          }
+        }
+      ],
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "indexByName": {
+              "Host": 0,
+              "Status": 1,
+              "Requests": 2
+            },
+            "excludeByName": {},
+            "renameByName": {}
+          }
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm"
+      }
+    },
+    {
+      "id": 31,
+      "type": "row",
+      "title": "openclapper.org: details",
+      "collapsed": true,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 87
+      },
+      "panels": [
+        {
+          "id": 19,
+          "type": "table",
+          "title": "Top paths on openclapper.org",
+          "gridPos": {
+            "w": 8,
+            "h": 10,
+            "x": 0,
+            "y": 88
+          },
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "cloudflare-analytics"
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "yesoreyeram-infinity-datasource",
+                "uid": "cloudflare-analytics"
+              },
+              "type": "graphql",
+              "source": "url",
+              "url": "/graphql",
+              "parser": "jq-backend",
+              "format": "table",
+              "root_selector": "if ((.errors // []) | length) > 0 then error([.errors[].message] | join(\"; \")) else ([.data.viewer.zones[]?.httpRequestsAdaptiveGroups[]? | { path: (.dimensions.clientRequestPath), requests: (.count) }]) end",
+              "columns": [
+                {
+                  "selector": "path",
+                  "text": "Path",
+                  "type": "string"
+                },
+                {
+                  "selector": "requests",
+                  "text": "Requests",
+                  "type": "number"
+                }
+              ],
+              "url_options": {
+                "method": "POST",
+                "body_type": "graphql",
+                "body_content_type": "application/json",
+                "body_graphql_query": "{ viewer { zones(filter: { zoneTag: \"9adc703717aec978ff419ff8563841de\" }) { httpRequestsAdaptiveGroups(limit: 25, filter: { datetime_geq: \"${__from:date:iso}\", datetime_leq: \"${__to:date:iso}\", requestSource: \"eyeball\", clientRequestHTTPHost: \"openclapper.org\" }, orderBy: [count_DESC]) { count dimensions { clientRequestPath } } } } }",
+                "body_graphql_variables": ""
+              }
+            }
+          ],
+          "transformations": [
+            {
+              "id": "organize",
+              "options": {
+                "indexByName": {
+                  "Path": 0,
+                  "Requests": 1
+                },
+                "excludeByName": {},
+                "renameByName": {}
+              }
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "custom": {}
+            },
+            "overrides": []
+          },
+          "options": {
+            "showHeader": true,
+            "cellHeight": "sm"
+          }
+        },
+        {
+          "id": 20,
+          "type": "table",
+          "title": "Countries",
+          "description": "Every host of the zone, from the daily totals.",
+          "gridPos": {
+            "w": 8,
+            "h": 10,
+            "x": 8,
+            "y": 88
+          },
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "cloudflare-analytics"
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "yesoreyeram-infinity-datasource",
+                "uid": "cloudflare-analytics"
+              },
+              "type": "graphql",
+              "source": "url",
+              "url": "/graphql",
+              "parser": "jq-backend",
+              "format": "table",
+              "root_selector": "if ((.errors // []) | length) > 0 then error([.errors[].message] | join(\"; \")) else ([.data.viewer.zones[]?.httpRequests1dGroups[]?.sum.countryMap[] | { country: (.clientCountryName), requests: (.requests), threats: (.threats) }] | group_by([.country]) | map({ country: (.[0].country), requests: (map(.requests) | add), threats: (map(.threats) | add) }) | sort_by(-.requests) | .[:30]) end",
+              "columns": [
+                {
+                  "selector": "country",
+                  "text": "Country",
+                  "type": "string"
+                },
+                {
+                  "selector": "requests",
+                  "text": "Requests",
+                  "type": "number"
+                },
+                {
+                  "selector": "threats",
+                  "text": "Threats",
+                  "type": "number"
+                }
+              ],
+              "url_options": {
+                "method": "POST",
+                "body_type": "graphql",
+                "body_content_type": "application/json",
+                "body_graphql_query": "{ viewer { zones(filter: { zoneTag: \"9adc703717aec978ff419ff8563841de\" }) { httpRequests1dGroups(limit: 400, filter: { date_geq: \"${__from:date:YYYY-MM-DD}\", date_leq: \"${__to:date:YYYY-MM-DD}\" }) { sum { countryMap { clientCountryName requests threats } } } } } }",
+                "body_graphql_variables": ""
+              }
+            }
+          ],
+          "transformations": [
+            {
+              "id": "organize",
+              "options": {
+                "indexByName": {
+                  "Country": 0,
+                  "Requests": 1,
+                  "Threats": 2
+                },
+                "excludeByName": {},
+                "renameByName": {}
+              }
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "custom": {}
+            },
+            "overrides": []
+          },
+          "options": {
+            "showHeader": true,
+            "cellHeight": "sm"
+          }
+        },
+        {
+          "id": 21,
+          "type": "table",
+          "title": "Other hosts (scanners, odd ports)",
+          "description": "Requests to host names that are not ours as listed in instance.mjs, mostly bots probing ports.",
+          "gridPos": {
+            "w": 8,
+            "h": 10,
+            "x": 16,
+            "y": 88
+          },
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "cloudflare-analytics"
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "yesoreyeram-infinity-datasource",
+                "uid": "cloudflare-analytics"
+              },
+              "type": "graphql",
+              "source": "url",
+              "url": "/graphql",
+              "parser": "jq-backend",
+              "format": "table",
+              "root_selector": "if ((.errors // []) | length) > 0 then error([.errors[].message] | join(\"; \")) else ([.data.viewer.zones[]?.httpRequestsAdaptiveGroups[]? | { host: (.dimensions.clientRequestHTTPHost), requests: (.count) }]) end",
+              "columns": [
+                {
+                  "selector": "host",
+                  "text": "Host",
+                  "type": "string"
+                },
+                {
+                  "selector": "requests",
+                  "text": "Requests",
+                  "type": "number"
+                }
+              ],
+              "url_options": {
+                "method": "POST",
+                "body_type": "graphql",
+                "body_content_type": "application/json",
+                "body_graphql_query": "{ viewer { zones(filter: { zoneTag: \"9adc703717aec978ff419ff8563841de\" }) { httpRequestsAdaptiveGroups(limit: 25, filter: { datetime_geq: \"${__from:date:iso}\", datetime_leq: \"${__to:date:iso}\", requestSource: \"eyeball\", clientRequestHTTPHost_notin: [\"openclapper.org\", \"www.openclapper.org\"] }, orderBy: [count_DESC]) { count dimensions { clientRequestHTTPHost } } } } }",
+                "body_graphql_variables": ""
+              }
+            }
+          ],
+          "transformations": [
+            {
+              "id": "organize",
+              "options": {
+                "indexByName": {
+                  "Host": 0,
+                  "Requests": 1
+                },
+                "excludeByName": {},
+                "renameByName": {}
+              }
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "custom": {}
+            },
+            "overrides": []
+          },
+          "options": {
+            "showHeader": true,
+            "cellHeight": "sm"
+          }
+        },
+        {
+          "id": 22,
+          "type": "piechart",
+          "title": "Cache status",
+          "description": "Known hosts. The page's assets come from the edge; the forms' API is never cached.",
+          "gridPos": {
+            "w": 8,
+            "h": 10,
+            "x": 0,
+            "y": 98
+          },
+          "datasource": {
+            "type": "yesoreyeram-infinity-datasource",
+            "uid": "cloudflare-analytics"
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "datasource": {
+                "type": "yesoreyeram-infinity-datasource",
+                "uid": "cloudflare-analytics"
+              },
+              "type": "graphql",
+              "source": "url",
+              "url": "/graphql",
+              "parser": "jq-backend",
+              "format": "table",
+              "root_selector": "if ((.errors // []) | length) > 0 then error([.errors[].message] | join(\"; \")) else ([.data.viewer.zones[]?.httpRequestsAdaptiveGroups[]? | { cache: (.dimensions.cacheStatus), requests: (.count) }]) end",
+              "columns": [
+                {
+                  "selector": "cache",
+                  "text": "Cache",
+                  "type": "string"
+                },
+                {
+                  "selector": "requests",
+                  "text": "Requests",
+                  "type": "number"
+                }
+              ],
+              "url_options": {
+                "method": "POST",
+                "body_type": "graphql",
+                "body_content_type": "application/json",
+                "body_graphql_query": "{ viewer { zones(filter: { zoneTag: \"9adc703717aec978ff419ff8563841de\" }) { httpRequestsAdaptiveGroups(limit: 50, filter: { datetime_geq: \"${__from:date:iso}\", datetime_leq: \"${__to:date:iso}\", requestSource: \"eyeball\", clientRequestHTTPHost_in: [\"openclapper.org\", \"www.openclapper.org\"] }) { count dimensions { cacheStatus } } } } }",
+                "body_graphql_variables": ""
+              }
+            }
+          ],
+          "transformations": [],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "custom": {}
+            },
+            "overrides": []
+          },
+          "options": {
+            "reduceOptions": {
+              "values": true,
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": ""
+            },
+            "pieType": "donut",
+            "legend": {
+              "displayMode": "table",
+              "placement": "right",
+              "values": [
+                "value",
+                "percent"
+              ],
+              "showLegend": true
+            },
+            "displayLabels": []
+          }
+        }
+      ]
+    },
+    {
+      "id": 32,
       "type": "row",
       "title": "Web Analytics (openclapper.app, openclapper.org)",
       "collapsed": false,
@@ -1464,12 +2022,12 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 71
+        "y": 108
       },
       "panels": []
     },
     {
-      "id": 16,
+      "id": 23,
       "type": "timeseries",
       "title": "Web Analytics: page views per site",
       "description": "Cloudflare Web Analytics (the beacon in the page), not the edge logs: only real browsers that run the script count. Kept 184 days.",
@@ -1477,7 +2035,7 @@
         "w": 12,
         "h": 8,
         "x": 0,
-        "y": 72
+        "y": 109
       },
       "datasource": {
         "type": "yesoreyeram-infinity-datasource",
@@ -1585,7 +2143,7 @@
       }
     },
     {
-      "id": 17,
+      "id": 24,
       "type": "timeseries",
       "title": "Web Analytics: page load time",
       "description": "Median and 90th percentile of the full page load, per site.",
@@ -1593,7 +2151,7 @@
         "w": 12,
         "h": 8,
         "x": 12,
-        "y": 72
+        "y": 109
       },
       "datasource": {
         "type": "yesoreyeram-infinity-datasource",
@@ -1689,14 +2247,14 @@
       }
     },
     {
-      "id": 18,
+      "id": 25,
       "type": "table",
       "title": "Web Analytics: top pages",
       "gridPos": {
         "w": 8,
         "h": 10,
         "x": 0,
-        "y": 80
+        "y": 117
       },
       "datasource": {
         "type": "yesoreyeram-infinity-datasource",
@@ -1774,14 +2332,14 @@
       }
     },
     {
-      "id": 19,
+      "id": 26,
       "type": "table",
       "title": "Web Analytics: referrers",
       "gridPos": {
         "w": 8,
         "h": 10,
         "x": 8,
-        "y": 80
+        "y": 117
       },
       "datasource": {
         "type": "yesoreyeram-infinity-datasource",
@@ -1859,14 +2417,14 @@
       }
     },
     {
-      "id": 20,
+      "id": 27,
       "type": "table",
       "title": "Web Analytics: countries and devices",
       "gridPos": {
         "w": 8,
         "h": 10,
         "x": 16,
-        "y": 80
+        "y": 117
       },
       "datasource": {
         "type": "yesoreyeram-infinity-datasource",
