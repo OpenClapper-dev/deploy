@@ -15,10 +15,11 @@ This is the operations side and belongs to this instance only.
   status class; 4xx and 5xx by host and status.
 - openclapper.app details (collapsed): top paths, countries, other host names (scanners on odd ports),
   cache status.
-- openclapper.org: the same daily and per-host view, empty until the site is deployed.
+- openclapper.org: the same two rows (overview and collapsed details), built by the same function (deploy#19).
 - Web Analytics (the beacon in the page, kept 184 days): page views and load time per site, top pages,
-  referrers, countries and devices. Web Analytics must be enabled per site in Cloudflare
-  (Web Analytics → Add a site); openclapper.app has it, openclapper.org needs it once it is live.
+  referrers, countries and devices. Both zones have a Web Analytics site with Cloudflare's automatic
+  setup, but neither page carries the beacon (Cloudflare does not inject it into Worker responses, and both
+  pages' CSP would block it), so this row stays empty until a page includes the script on purpose.
 
 **OpenClapper · Platform**
 - Cost (every environment together, as Cloudflare bills): Workers and Durable Object requests per script,
@@ -47,7 +48,7 @@ to the stack's default contact point.
 | Web Analytics | 184 days | 93 days |
 
 A dashboard range above 30 days fails on the per-host and per-resource panels; the daily panels go further.
-Cloudflare's GraphQL API allows 300 queries per 5 minutes. Opening Traffic costs 12 queries and Platform 8;
+Cloudflare's GraphQL API allows 300 queries per 5 minutes. Opening Traffic costs 13 queries and Platform 8;
 the collapsed rows query only when opened, and the dashboards do not refresh by themselves.
 
 Grafana Cloud Free: 3 users, alerting, 14-day retention (irrelevant here: nothing is stored).
