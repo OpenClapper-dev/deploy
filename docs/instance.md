@@ -32,6 +32,7 @@ After a clone, staging holds production's accounts and password hashes (sessions
 
 ## History
 
+- 2026-11-12: Development · Build phone app (#22): the dev client "OpenClapper Dev" (`org.openclapper.dev`) for Google Play's internal track, from the `development` environment (its own key and service account `play-uploader-development`, still to be set up). The Play app, its first bundle and the tester are set up by hand.
 - 2026-10-28: Grafana monitoring (#15): Traffic and Platform dashboards and three production alerts, generated in `grafana/` and pushed by Grafana · Sync from the `monitoring` environment.
 - 2026-10-23: Google Play. Both apps on the internal track (first bundles by hand: staging 407, production 11000), uploads from Build APK verified (staging 410). New keys per environment; no key is kept on the owner's machine any more.
 - 2026-10-23: v0.10.0. Production moved to the `production` GitHub environment; `deploy.env` and the last repository variable (`APP_URL`) are gone (#7). Access app renamed "OpenClapper Admin". The owner plans new signing keys for production and staging (the old one is `CN=Fielder`); installs from the old key are replaced once.
@@ -49,4 +50,4 @@ After a clone, staging holds production's accounts and password hashes (sessions
 
 ## Settings
 
-The `production` and `staging` GitHub environments of this repository (README.md). Nothing local.
+The `production`, `staging` and `development` GitHub environments of this repository (README.md). Nothing local.
