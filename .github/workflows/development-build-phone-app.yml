@@ -1,0 +1,34 @@
+# Builds the development client "OpenClapper Dev" (org.openclapper.dev, moss icon): core's Build phone app
+# workflow with variant dev on core's main (or the branch given), with the development environment. That
+# environment holds the dev app's key (its upload key on Google Play) and the Play service account, so the
+# build is a signed release build that keeps the dev launcher and menu (#22). The APK and the App Bundle are
+# the run's artifacts for 3 days; with track: internal the bundle also goes to the dev app's internal track.
+# It needs no server: the dev client loads the JavaScript, and with it the server's address, from Metro.
+name: Development · Build phone app
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Branch, tag or commit of core to build
+        type: string
+        default: main
+      track:
+        description: Also upload the bundle to this Google Play track of the dev app
+        type: choice
+        options: [none, internal]
+        default: none
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    uses: OpenClapper-dev/core/.github/workflows/build-phone-app.yml@main
+    with:
+      path: core
+      variant: dev
+      track: ${{ inputs.track || 'none' }}
+      environment: development
+      ref: ${{ inputs.ref || 'main' }}
+    secrets: inherit

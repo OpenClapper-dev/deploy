@@ -20,9 +20,8 @@ All manual, named by instance first:
 | **Staging · Deploy server** | the same for staging, on core's `main` or a `ref` |
 | **Staging · Build phone app** | "OpenClapper Staging", APK + App Bundle; `track: internal` uploads to Play |
 | **Staging · Recreate from production** | staging rebuilt as a copy of production (production only read), then deployed |
+| **Development · Build phone app** | the dev client "OpenClapper Dev", APK + App Bundle; `track: internal` uploads to Play |
 | **Grafana · Sync** | the monitoring dashboards, alert rules and their Cloudflare data source to the Grafana Cloud stack ([grafana/](grafana/README.md)) |
-
-The development client is not built here: it needs no deployment (core's Build phone app, `variant: dev`).
 
 ## Release (one button)
 
@@ -86,6 +85,17 @@ only changes the version. Rolling staging back is the same step with an older ta
 is the build time, so the older build still arrives on the phone as an update. Staging's database keeps
 its newer schema (migrations only add).
 
+## Development client
+
+**Development · Build phone app** builds "OpenClapper Dev" (`org.openclapper.dev`, moss icon) from core's
+`main` (or the `ref` given): the app with its native modules and Expo's dev launcher, loading the
+JavaScript from Metro (`make mobile` in core). It needs no server and no instance; its settings are the
+`development` GitHub environment, which holds the dev app's key and its Play service account. With
+`track: internal` the bundle goes to the dev app's internal track, so after a native change the phone
+gets the new client from Play instead of a copied APK (#22). Its version code is the build time, like
+staging's. Core's `make dev-build` stays for quick native iterations: it builds "OpenClapper Dev Local"
+(`org.openclapper.dev.local`, debug-signed), which installs next to the Play app.
+
 ## Settings
 
 Shared secrets (Settings → Secrets and variables → Actions), used by both instances:
@@ -121,12 +131,15 @@ The `monitoring` environment (Settings → Environments, `main` only) holds Graf
 Grafana · Sync only: the variable `GRAFANA_URL` and the secrets `GRAFANA_TOKEN` (a service account of the
 stack) and `CF_GRAFANA_TOKEN` (a read-only Cloudflare analytics token). Setup in [grafana/](grafana/README.md#setting-it-up).
 
-Per environment, `production` and `staging` each have their own secrets for the phone app: the Android
+The `development` environment (Settings → Environments, `main` only) holds only the dev client's phone
+app secrets below; no variables, since the dev client has no server of its own.
+
+Per environment, `production`, `staging` and `development` each have their own secrets for the phone app: the Android
 key (`ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD`;
 the app's upload key on Google Play, which signs with a Google-generated key) and
-`PLAY_SERVICE_ACCOUNT_JSON` (the key of that app's own service account, `play-uploader-production` or
-`play-uploader-staging`, invited in the Play Console on its own app only, "Release apps to testing
-tracks"). Copies of all keys are in the owner's Bitwarden, nowhere else. A lost upload key can be reset
+`PLAY_SERVICE_ACCOUNT_JSON` (the key of that app's own service account, `play-uploader-production`,
+`play-uploader-staging` or `play-uploader-development`, invited in the Play Console on its own app only,
+"Release apps to testing tracks"). Copies of all keys are in the owner's Bitwarden, nowhere else. A lost upload key can be reset
 through Play Console support; a lost service account key is replaced by a new key on the account.
 
 ## Updating
